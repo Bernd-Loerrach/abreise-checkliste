@@ -267,6 +267,8 @@ const DEFAULT_LOE_VIL = [
 // Rückrichtung: Vilamoura-Haus verlassen, Ankunft in Lörrach
 const DEFAULT_VIL_LOE = [
   { t: "Vor der Abreise erledigen", e: "🛒", items: [
+    "Flüge buchen",
+    "Bolt / Uber zum Flughafen buchen",
     "Einkaufen für die Fahrt (Snacks, Getränke)",
     "Bargeld abheben",
     "Auto volltanken",
@@ -365,7 +367,7 @@ const ROUTES = [
 ];
 
 // Gezielte Inhalts-Anpassungen, die auch auf bereits gespeicherten Listen greifen (idempotent).
-const CONTENT_REV = 1;
+const CONTENT_REV = 2;
 function applyContentMigrations(st) {
   if ((st.contentRev || 0) < 1) {
     const lv = st.routes["loe-vil"];
@@ -389,6 +391,18 @@ function applyContentMigrations(st) {
         const tier = pmt2.items.find(i => /^Tierversorgung geklärt/.test(i.x));
         if (tier) tier.x = "Katzensitter für 2 Katzen organisiert";
         else if (!pmt2.items.some(i => /Katze/.test(i.x))) pmt2.items.push({ x: "Katzensitter für 2 Katzen organisiert", done: false });
+      }
+    }
+  }
+  if ((st.contentRev || 0) < 2) {
+    const vl = st.routes["vil-loe"];
+    if (vl) {
+      const vor = vl.sections.find(s => s.t === "Vor der Abreise erledigen");
+      if (vor) {
+        // vorne einfügen → Endreihenfolge: „Flüge buchen“, dann „Bolt / Uber …“
+        ["Bolt / Uber zum Flughafen buchen", "Flüge buchen"].forEach(x => {
+          if (!vor.items.some(i => i.x === x)) vor.items.unshift({ x, done: false });
+        });
       }
     }
   }
