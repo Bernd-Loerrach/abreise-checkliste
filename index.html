@@ -67,7 +67,9 @@
   .section > h2 .emoji { font-size: 1.1rem; }
   .section > h2 .sec-count { margin-left: auto; font-size: .75rem; color: var(--muted); font-weight: 500; font-variant-numeric: tabular-nums; }
   ul { list-style: none; margin: 0; padding: .25rem .5rem .5rem; }
-  li { display: flex; align-items: flex-start; gap: .7rem; padding: .55rem .55rem; border-radius: 10px; cursor: pointer; transition: background .12s; }
+  li { display: flex; flex-direction: column; padding: .5rem .55rem; border-radius: 10px; transition: background .12s; }
+  .item-row { display: flex; align-items: flex-start; gap: .7rem; }
+  li .box, li .label { cursor: pointer; }
   li:hover { background: var(--bg); }
   li .box {
     flex: none; width: 22px; height: 22px; border: 2px solid var(--border); border-radius: 7px;
@@ -102,6 +104,18 @@
     background: var(--done-soft); color: var(--done); font-weight: 600; display: none;
   }
   .done-banner.show { display: block; }
+  .attach-btn { flex: none; border: none; background: none; color: var(--muted); cursor: pointer; font-size: 1rem; padding: 0 .15rem; opacity: .5; }
+  li:hover .attach-btn { opacity: .9; }
+  .attach-menu { display: flex; gap: .4rem; margin: .45rem 0 .15rem 2rem; }
+  .attach-menu button { border: 1px solid var(--border); background: var(--card); color: var(--text); border-radius: 8px; padding: .35rem .65rem; font-size: .82rem; cursor: pointer; }
+  .attach-menu button:hover { border-color: var(--accent); color: var(--accent); }
+  .atts { display: flex; flex-wrap: wrap; gap: .4rem; margin: .4rem 0 .1rem 2rem; }
+  .att { display: inline-flex; align-items: center; gap: .35rem; background: var(--bg); border: 1px solid var(--border); border-radius: 9px; padding: .22rem .45rem; font-size: .8rem; cursor: pointer; max-width: 100%; }
+  .att:hover { border-color: var(--accent); }
+  .att img { width: 36px; height: 36px; object-fit: cover; border-radius: 6px; display: block; }
+  .att .att-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 150px; }
+  .att .att-del { border: none; background: none; color: var(--muted); cursor: pointer; font-size: .95rem; line-height: 1; padding: 0 0 0 .1rem; }
+  .att .att-del:hover { color: #ef4444; }
   footer { text-align: center; color: var(--muted); font-size: .75rem; margin-top: 1.5rem; padding: 0 1rem; }
 </style>
 </head>
@@ -221,11 +235,34 @@ const DEFAULT = [
   ]},
 ];
 
+// ---------- Speicherung: IndexedDB (groß genug für Bilder/Dateien) ----------
+const DB_NAME = "abreise-checkliste-db", STORE = "kv", KEY = "state";
+function idb() {
+  return new Promise((res, rej) => {
+    const r = indexedDB.open(DB_NAME, 1);
+    r.onupgradeneeded = () => r.result.createObjectStore(STORE);
+    r.onsuccess = () => res(r.result);
+    r.onerror = () => rej(r.error);
+  });
+}
+async function idbGet(key) {
+  const db = await idb();
+  return new Promise((res, rej) => {
+    const q = db.transaction(STORE, "readonly").objectStore(STORE).get(key);
+    q.onsuccess = () => res(q.result); q.onerror = () => rej(q.error);
+  });
+}
+async function idbSet(key, val) {
+  const db = await idb();
+  return new Promise((res, rej) => {
+    const tx = db.transaction(STORE, "readwrite");
+    tx.objectStore(STORE).put(val, key);
+    tx.oncomplete = () => res(); tx.onerror = () => rej(tx.error);
+  });
+}
+
 function freshSection(d) { return { t: d.t, e: d.e, items: d.items.map(x => ({ x, done: false })) }; }
-function load() {
-  let saved;
-  try { saved = JSON.parse(localStorage.getItem(STORAGE)); } catch(e){}
-  if (!saved || !saved.sections) return { sections: DEFAULT.map(freshSection) };
+function mergeDefaults(saved) {
   // Bestehenden Fortschritt behalten, aber neue Standard-Bereiche an ihrer Position ergänzen.
   const have = new Set(saved.sections.map(s => s.t));
   DEFAULT.forEach((d, idx) => {
@@ -233,9 +270,79 @@ function load() {
   });
   return saved;
 }
-function save() { localStorage.setItem(STORAGE, JSON.stringify(state)); }
+async function load() {
+  let saved = null;
+  try { saved = await idbGet(KEY); } catch(e){}
+  if (!saved || !saved.sections) {
+    // Einmalige Migration aus alter localStorage-Speicherung
+    try { const ls = JSON.parse(localStorage.getItem(STORAGE)); if (ls && ls.sections) saved = ls; } catch(e){}
+  }
+  if (!saved || !saved.sections) return { sections: DEFAULT.map(freshSection) };
+  return mergeDefaults(saved);
+}
+let saveTimer = null, initialized = false;
+function save() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => { idbSet(KEY, state).catch(() => alert("Speicher voll – Anhang evtl. zu groß.")); }, 150);
+}
+function flushSave() { if (!initialized) return; clearTimeout(saveTimer); idbSet(KEY, state).catch(() => {}); }
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") flushSave(); });
+window.addEventListener("pagehide", flushSave);
 
-let state = load();
+// ---------- Anhänge ----------
+function readFileAsDataURL(file) {
+  return new Promise((res, rej) => { const fr = new FileReader(); fr.onload = () => res(fr.result); fr.onerror = () => rej(fr.error); fr.readAsDataURL(file); });
+}
+function processImage(file) {
+  // Bilder verkleinern, damit der Speicher nicht überläuft
+  return readFileAsDataURL(file).then(dataUrl => new Promise(res => {
+    const img = new Image();
+    img.onload = () => {
+      const max = 1400; let w = img.width, h = img.height;
+      if (w > max || h > max) { const r = Math.min(max / w, max / h); w = Math.round(w * r); h = Math.round(h * r); }
+      const c = document.createElement("canvas"); c.width = w; c.height = h;
+      c.getContext("2d").drawImage(img, 0, 0, w, h);
+      res(c.toDataURL("image/jpeg", 0.82));
+    };
+    img.onerror = () => res(dataUrl);
+    img.src = dataUrl;
+  }));
+}
+function dataUrlToBlob(dataUrl) {
+  const [meta, b64] = dataUrl.split(",");
+  const mime = (meta.match(/:(.*?);/) || [])[1] || "application/octet-stream";
+  const bin = atob(b64), arr = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+  return new Blob([arr], { type: mime });
+}
+function openAttachment(a) {
+  if (a.k === "link") { window.open(a.url, "_blank", "noopener"); return; }
+  const url = URL.createObjectURL(dataUrlToBlob(a.data));
+  window.open(url, "_blank", "noopener");
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
+}
+function addLink(it) {
+  let url = prompt("Link-Adresse (URL):", "https://");
+  if (!url) return;
+  url = url.trim(); if (!/^https?:\/\//i.test(url)) url = "https://" + url;
+  const label = (prompt("Bezeichnung (optional):", "") || "").trim();
+  (it.att = it.att || []).push({ k: "link", url, label });
+  save(); render();
+}
+function pickFile(it) {
+  const inp = document.createElement("input");
+  inp.type = "file"; inp.accept = "image/*,application/pdf,*/*";
+  inp.onchange = async () => {
+    const file = inp.files && inp.files[0]; if (!file) return;
+    try {
+      const isImg = file.type.startsWith("image/");
+      const data = isImg ? await processImage(file) : await readFileAsDataURL(file);
+      (it.att = it.att || []).push({ k: isImg ? "img" : "file", name: file.name, mime: file.type, data });
+      save(); render();
+    } catch (e) { alert("Datei konnte nicht geladen werden."); }
+  };
+  inp.click();
+}
 
 function render() {
   const list = document.getElementById("list");
@@ -253,14 +360,47 @@ function render() {
 
     sec.items.forEach((it, ii) => {
       const li = document.createElement("li");
-      li.className = it.done ? "done" : "";
-      li.innerHTML = `
+      if (it.done) li.classList.add("done");
+
+      const rowEl = document.createElement("div");
+      rowEl.className = "item-row";
+      rowEl.innerHTML = `
         <span class="box"><svg viewBox="0 0 24 24"><polyline points="4 12 10 18 20 6"/></svg></span>
         <span class="label">${escapeHtml(it.x)}</span>
+        <button class="attach-btn" title="Anhang hinzufügen">📎</button>
         <button class="del" title="Entfernen">×</button>`;
-      li.querySelector(".label").addEventListener("click", () => { it.done = !it.done; save(); render(); });
-      li.querySelector(".box").addEventListener("click", () => { it.done = !it.done; save(); render(); });
-      li.querySelector(".del").addEventListener("click", (ev) => { ev.stopPropagation(); sec.items.splice(ii,1); save(); render(); });
+      rowEl.querySelector(".label").addEventListener("click", () => { it.done = !it.done; save(); render(); });
+      rowEl.querySelector(".box").addEventListener("click", () => { it.done = !it.done; save(); render(); });
+      rowEl.querySelector(".del").addEventListener("click", (ev) => { ev.stopPropagation(); sec.items.splice(ii,1); save(); render(); });
+      li.appendChild(rowEl);
+
+      const menu = document.createElement("div");
+      menu.className = "attach-menu"; menu.style.display = "none";
+      menu.innerHTML = `<button data-a="link">🔗 Link</button><button data-a="file">🖼 Bild / Datei</button>`;
+      menu.querySelector('[data-a="link"]').addEventListener("click", () => { menu.style.display = "none"; addLink(it); });
+      menu.querySelector('[data-a="file"]').addEventListener("click", () => { menu.style.display = "none"; pickFile(it); });
+      rowEl.querySelector(".attach-btn").addEventListener("click", (ev) => {
+        ev.stopPropagation();
+        menu.style.display = menu.style.display === "none" ? "flex" : "none";
+      });
+      li.appendChild(menu);
+
+      if (it.att && it.att.length) {
+        const atts = document.createElement("div");
+        atts.className = "atts";
+        it.att.forEach((a, ai) => {
+          const chip = document.createElement("span");
+          chip.className = "att";
+          if (a.k === "img")      chip.innerHTML = `<img src="${a.data}" alt=""><span class="att-name">${escapeHtml(a.name || "Bild")}</span><button class="att-del" title="Entfernen">×</button>`;
+          else if (a.k === "file") chip.innerHTML = `<span>📄</span><span class="att-name">${escapeHtml(a.name || "Datei")}</span><button class="att-del" title="Entfernen">×</button>`;
+          else                     chip.innerHTML = `<span>🔗</span><span class="att-name">${escapeHtml(a.label || a.url)}</span><button class="att-del" title="Entfernen">×</button>`;
+          chip.addEventListener("click", () => openAttachment(a));
+          chip.querySelector(".att-del").addEventListener("click", (ev) => { ev.stopPropagation(); it.att.splice(ai, 1); save(); render(); });
+          atts.appendChild(chip);
+        });
+        li.appendChild(atts);
+      }
+
       ul.appendChild(li);
     });
 
@@ -288,14 +428,22 @@ function resetChecks() {
   state.sections.forEach(s => s.items.forEach(i => i.done = false));
   save(); render();
 }
-function resetAll() {
-  if (!confirm("Alle eigenen Änderungen verwerfen und Standardliste wiederherstellen?")) return;
+async function resetAll() {
+  if (!confirm("Alle eigenen Änderungen und Anhänge verwerfen und Standardliste wiederherstellen?")) return;
+  try { await idbSet(KEY, null); } catch(e){}
   localStorage.removeItem(STORAGE);
-  state = load(); save(); render();
+  state = { sections: DEFAULT.map(freshSection) };
+  save(); render();
 }
 function escapeHtml(s){ return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
-render();
+let state = { sections: [] };
+(async function init() {
+  state = await load();
+  initialized = true;
+  save();      // gemergte Bereiche / Migration sichern
+  render();
+})();
 </script>
 </body>
 </html>
