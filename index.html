@@ -116,6 +116,9 @@
   .att .att-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 150px; }
   .att .att-del { border: none; background: none; color: var(--muted); cursor: pointer; font-size: .95rem; line-height: 1; padding: 0 0 0 .1rem; }
   .att .att-del:hover { color: #ef4444; }
+  .routes { display: flex; gap: .4rem; margin: .55rem 0 .2rem; }
+  .route-tab { flex: 1; border: 1px solid var(--border); background: var(--bg); color: var(--muted); border-radius: 9px; padding: .45rem .5rem; font-size: .82rem; font-weight: 600; cursor: pointer; transition: all .12s; }
+  .route-tab.active { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
   .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.45); display: flex; align-items: flex-start; justify-content: center; padding: 2rem 1rem; z-index: 50; overflow-y: auto; }
   .panel { background: var(--card); color: var(--text); width: 100%; max-width: 640px; border-radius: 16px; box-shadow: var(--shadow); overflow: hidden; }
   .panel-head { display: flex; align-items: center; gap: .6rem; padding: .9rem 1rem; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--card); }
@@ -146,7 +149,8 @@
 <header>
   <div class="wrap">
     <h1>🧳 Abreise-Checkliste</h1>
-    <p class="sub">Lörrach-Wohnung verlassen · längere Reise nach Portugal</p>
+    <div class="routes" id="routes"></div>
+    <p class="sub" id="sub"></p>
     <div class="progress-row">
       <div class="bar" id="bar"><span></span></div>
       <span class="count" id="count">0 / 0</span>
@@ -169,7 +173,7 @@
 <script>
 const STORAGE = "abreise-checkliste-v1";
 
-const DEFAULT = [
+const DEFAULT_LOE_VIL = [
   { t: "Vor der Abreise erledigen", e: "🛒", items: [
     "Einkaufen für die Fahrt (Snacks, Getränke)",
     "Bargeld abheben (Euro)",
@@ -260,6 +264,106 @@ const DEFAULT = [
   ]},
 ];
 
+// Rückrichtung: Vilamoura-Haus verlassen, Ankunft in Lörrach
+const DEFAULT_VIL_LOE = [
+  { t: "Vor der Abreise erledigen", e: "🛒", items: [
+    "Einkaufen für die Fahrt (Snacks, Getränke)",
+    "Bargeld abheben",
+    "Auto volltanken",
+    "Auto checken: Reifen, Öl, Wischwasser",
+    "Medikamente / Rezepte besorgen",
+    "Wichtige Post & Rechnungen erledigen",
+    "Freunde & Nachbarn über Abreise informieren",
+    "Reiseroute / Übernachtung planen",
+    "Handy & Powerbank vollladen",
+  ]},
+  { t: "Motorräder & Garage", e: "🏍️", items: [
+    "Motorräder volltanken",
+    "Motorräder ans Erhaltungs-Ladegerät hängen",
+    "Motorräder abdecken / sichern",
+    "Garage / Stellplatz abschließen",
+  ]},
+  { t: "Küche & Kühlschrank", e: "🧊", items: [
+    "Kühlschrank leeren (verderbliche Lebensmittel)",
+    "Kühlschrank ausschalten / abtauen lassen",
+    "Kühlschranktür offen lassen (gegen Schimmel)",
+    "Gefrierfach abtauen & Tür offen lassen",
+    "Herd & Backofen aus, Gas zudrehen",
+    "Kaffeemaschine / Wasserkocher aus & leeren",
+    "Spülmaschine leeren",
+    "Obstschale leeren",
+  ]},
+  { t: "Fenster, Türen & Persianas", e: "🪟", items: [
+    "Alle Fenster & Schiebetüren schließen",
+    "Terrassen-/Balkontür abschließen",
+    "Persianas / Rollläden herunterlassen",
+    "Markise einfahren",
+    "Haustür abschließen",
+  ]},
+  { t: "Strom & Klimaanlage", e: "🔌", items: [
+    "Stand-by-Geräte vom Strom (TV, Ladegeräte)",
+    "Mehrfachsteckdosen ausschalten",
+    "Klimaanlage & Ventilatoren aus",
+    "WLAN-Router (lassen? für Smart-Home prüfen)",
+    "Zeitschaltuhr für Lampen einstellen (Sicherheit)",
+  ]},
+  { t: "Wasser, Pool & Außenbereich", e: "🚰", items: [
+    "Haupt-Wasserhahn zudrehen",
+    "Boiler / Warmwasser ausschalten",
+    "Pool-Pflege / Service organisiert",
+    "Außenmöbel & Polster sichern / verstauen",
+    "Spül- & Waschmaschine: Türen offen lassen",
+  ]},
+  { t: "Pflanzen, Müll & Tiere", e: "🪴", items: [
+    "Pflanzen gründlich gießen",
+    "Bewässerung / Nachbar für Pflanzen organisiert",
+    "Alle Mülleimer leeren (auch Bad)",
+    "Müll & Recycling wegbringen (Contentores)",
+    "Tierversorgung geklärt (falls vorhanden)",
+  ]},
+  { t: "Sicherheit & Organisatorisches", e: "🔐", items: [
+    "Nachbar / Vertrauensperson informiert",
+    "Schlüssel hinterlegt (Notfall)",
+    "Wertsachen sicher verstaut",
+    "Alarmanlage scharf stellen",
+    "Termine / Lieferungen pausiert",
+  ]},
+  { t: "Reisegepäck & Dokumente", e: "🛂", items: [
+    "Reisepass / Personalausweis",
+    "Geldbeutel, Bankkarten, Bargeld",
+    "Ladegeräte & Powerbank",
+    "Medikamente",
+    "Auto-Papiere & grüne Versicherungskarte",
+    "Schlüssel Wohnung Lörrach",
+    "Handy-Ladestand & Offline-Karten",
+  ]},
+  { t: "Letzter Rundgang", e: "🚪", items: [
+    "Müll wegbringen",
+    "Alle Lichter aus (außer Zeitschaltuhr)",
+    "Wasser nirgends läuft",
+    "Letzter Blick: Herd, Klima, Fenster, Türen",
+    "Tür abgeschlossen – losfahren! 🚗",
+  ]},
+  { t: "Nach Ankunft in Lörrach", e: "🏠", items: [
+    "Sicher angekommen: Familie Bescheid geben",
+    "Wasser, Strom & Gas aufdrehen",
+    "Heizung hochstellen / einschalten",
+    "Wohnung gründlich lüften",
+    "Kühlschrank einschalten & befüllen",
+    "Grundvorräte einkaufen",
+    "Motorrad bei Alex abholen",
+    "Freunde & Nachbarn kontaktieren",
+    "Internet / WLAN-Router prüfen",
+    "Post / Nachsendung holen",
+  ]},
+];
+
+// Beide Reiserichtungen
+const ROUTES = [
+  { id: "loe-vil", label: "Lörrach → Vilamoura", from: "Lörrach", to: "Vilamoura", def: DEFAULT_LOE_VIL },
+  { id: "vil-loe", label: "Vilamoura → Lörrach", from: "Vilamoura", to: "Lörrach", def: DEFAULT_VIL_LOE },
+];
+
 // ---------- Speicherung: IndexedDB (groß genug für Bilder/Dateien) ----------
 const DB_NAME = "abreise-checkliste-db", STORE = "kv", KEY = "state";
 function idb() {
@@ -287,23 +391,40 @@ async function idbSet(key, val) {
 }
 
 function freshSection(d) { return { t: d.t, e: d.e, items: d.items.map(x => ({ x, done: false })) }; }
-function mergeDefaults(saved) {
+function freshRoute(def) { return { sections: def.map(freshSection), archives: [] }; }
+function cur() { return state.routes[state.active]; }
+function mergeDefaults(route, def) {
   // Bestehenden Fortschritt behalten, aber neue Standard-Bereiche an ihrer Position ergänzen.
-  const have = new Set(saved.sections.map(s => s.t));
-  DEFAULT.forEach((d, idx) => {
-    if (!have.has(d.t)) saved.sections.splice(Math.min(idx, saved.sections.length), 0, freshSection(d));
+  const have = new Set(route.sections.map(s => s.t));
+  def.forEach((d, idx) => {
+    if (!have.has(d.t)) route.sections.splice(Math.min(idx, route.sections.length), 0, freshSection(d));
   });
-  return saved;
+  return route;
 }
 async function load() {
   let saved = null;
   try { saved = await idbGet(KEY); } catch(e){}
-  if (!saved || !saved.sections) {
+  if (!saved) {
     // Einmalige Migration aus alter localStorage-Speicherung
     try { const ls = JSON.parse(localStorage.getItem(STORAGE)); if (ls && ls.sections) saved = ls; } catch(e){}
   }
-  if (!saved || !saved.sections) return { sections: DEFAULT.map(freshSection) };
-  return mergeDefaults(saved);
+  let st;
+  if (saved && saved.routes) {
+    st = saved;                                   // bereits neues Format
+  } else if (saved && saved.sections) {
+    // altes Einzel-Format → als Richtung „Lörrach → Vilamoura“ übernehmen
+    st = { active: "loe-vil", routes: { "loe-vil": { sections: saved.sections, archives: saved.archives || [] } } };
+  } else {
+    st = { active: "loe-vil", routes: {} };
+  }
+  st.routes = st.routes || {};
+  ROUTES.forEach(r => {
+    if (!st.routes[r.id]) st.routes[r.id] = freshRoute(r.def);
+    st.routes[r.id].archives = st.routes[r.id].archives || [];
+    mergeDefaults(st.routes[r.id], r.def);
+  });
+  if (!st.active || !st.routes[st.active]) st.active = "loe-vil";
+  return st;
 }
 let saveTimer = null, initialized = false;
 function save() {
@@ -376,11 +497,24 @@ function pickFile(it, accept) {
 }
 
 function render() {
+  // Richtungs-Tabs
+  const routesEl = document.getElementById("routes");
+  routesEl.innerHTML = "";
+  ROUTES.forEach(r => {
+    const b = document.createElement("button");
+    b.className = "route-tab" + (r.id === state.active ? " active" : "");
+    b.textContent = r.label;
+    b.addEventListener("click", () => { if (state.active === r.id) return; state.active = r.id; save(); render(); window.scrollTo(0, 0); });
+    routesEl.appendChild(b);
+  });
+  const activeRoute = ROUTES.find(r => r.id === state.active);
+  document.getElementById("sub").textContent = activeRoute.from + " verlassen · Ankunft in " + activeRoute.to;
+
   const list = document.getElementById("list");
   list.innerHTML = "";
   let total = 0, done = 0;
 
-  state.sections.forEach((sec, si) => {
+  cur().sections.forEach((sec, si) => {
     sec.items.forEach(it => { total++; if (it.done) done++; });
     const secDone = sec.items.filter(i => i.done).length;
 
@@ -454,12 +588,12 @@ function render() {
   document.getElementById("bar").classList.toggle("complete", done === total && total > 0);
   document.getElementById("count").textContent = `${done} / ${total}`;
   document.getElementById("banner").classList.toggle("show", done === total && total > 0);
-  const n = (state.archives || []).length;
+  const n = (cur().archives || []).length;
   document.getElementById("archCount").textContent = n ? "(" + n + ")" : "";
 }
 
 function resetChecks() {
-  state.sections.forEach(s => s.items.forEach(i => i.done = false));
+  cur().sections.forEach(s => s.items.forEach(i => i.done = false));
   save(); render();
 }
 
@@ -470,14 +604,14 @@ function archiveAndRestart() {
   let name = prompt("Name für diese Reise (zum Archivieren):", defName);
   if (name === null) return;              // abgebrochen
   name = name.trim() || defName;
-  state.archives = state.archives || [];
-  state.archives.unshift({
+  cur().archives = cur().archives || [];
+  cur().archives.unshift({
     id: Date.now(),
     name,
     date: now.toISOString(),
-    sections: JSON.parse(JSON.stringify(state.sections))   // Schnappschuss inkl. Anhänge
+    sections: JSON.parse(JSON.stringify(cur().sections))   // Schnappschuss inkl. Anhänge
   });
-  state.sections.forEach(s => s.items.forEach(i => i.done = false));   // frisch starten
+  cur().sections.forEach(s => s.items.forEach(i => i.done = false));   // frisch starten
   save(); render();
   alert("Gespeichert als „" + name + "“.\nDie Liste ist jetzt für die nächste Reise zurückgesetzt (Punkte & Anhänge bleiben erhalten).");
 }
@@ -500,7 +634,7 @@ function archStats(a) {
 function renderArchiveList(panel, overlay) {
   panel.innerHTML = `<div class="panel-head"><h2>📚 Archivierte Reisen</h2><button class="panel-close" title="Schließen">×</button></div>`;
   panel.querySelector(".panel-close").addEventListener("click", () => overlay.remove());
-  const archives = state.archives || [];
+  const archives = cur().archives || [];
   if (!archives.length) {
     const p = document.createElement("p"); p.className = "panel-empty";
     p.textContent = "Noch keine Reisen archiviert. Über „📁 Reise archivieren & neu starten“ speicherst du den aktuellen Stand.";
@@ -517,7 +651,7 @@ function renderArchiveList(panel, overlay) {
     row.querySelector(".arch-view").addEventListener("click", () => renderArchiveDetail(panel, overlay, a));
     row.querySelector(".arch-del").addEventListener("click", () => {
       if (!confirm("Diese archivierte Reise löschen?")) return;
-      state.archives = state.archives.filter(x => x.id !== a.id);
+      cur().archives = cur().archives.filter(x => x.id !== a.id);
       save(); render(); renderArchiveList(panel, overlay);
     });
     list.appendChild(row);
@@ -554,18 +688,16 @@ function renderArchiveDetail(panel, overlay, a) {
   panel.appendChild(body);
 }
 async function resetAll() {
-  if (!confirm("Alle eigenen Änderungen und Anhänge verwerfen und Standardliste wiederherstellen?")) return;
-  try { await idbSet(KEY, null); } catch(e){}
-  localStorage.removeItem(STORAGE);
-  state = { sections: DEFAULT.map(freshSection) };
+  const r = ROUTES.find(x => x.id === state.active);
+  if (!confirm("Liste „" + r.label + "“ auf den Standard zurücksetzen?\n(Eigene Punkte & Anhänge dieser Richtung gehen verloren. Der Verlauf und die andere Richtung bleiben.)")) return;
+  cur().sections = r.def.map(freshSection);
   save(); render();
 }
 function escapeHtml(s){ return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
-let state = { sections: [] };
+let state = { active: "loe-vil", routes: { "loe-vil": { sections: [], archives: [] } } };
 (async function init() {
   state = await load();
-  state.archives = state.archives || [];
   initialized = true;
   save();      // gemergte Bereiche / Migration sichern
   render();
