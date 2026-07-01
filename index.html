@@ -80,9 +80,12 @@
   li.done .box svg { opacity: 1; }
   li .label { flex: 1; font-size: .92rem; }
   li.done .label { color: var(--muted); text-decoration: line-through; }
-  li .del { flex: none; opacity: 0; border: none; background: none; color: var(--muted); cursor: pointer; font-size: 1.05rem; padding: 0 .2rem; line-height: 1; }
-  li:hover .del { opacity: .6; }
+  li .del { flex: none; opacity: .5; border: none; background: none; color: var(--muted); cursor: pointer; font-size: 1.05rem; padding: 0 .2rem; line-height: 1; }
+  li:hover .del { opacity: .7; }
   li .del:hover { opacity: 1; color: #ef4444; }
+  li .edit-btn { flex: none; opacity: .5; border: none; background: none; cursor: pointer; font-size: .95rem; padding: 0 .1rem; line-height: 1; }
+  li:hover .edit-btn { opacity: .9; }
+  .edit-input { flex: 1; border: 1px solid var(--accent); background: var(--card); color: var(--text); border-radius: 7px; padding: .3rem .45rem; font-size: .92rem; outline: none; font-family: inherit; }
   .add-row { display: flex; gap: .4rem; padding: .3rem .6rem .7rem; }
   .add-row input {
     flex: 1; border: 1px solid var(--border); background: var(--bg); color: var(--text);
@@ -593,6 +596,24 @@ function pickFile(it, accept) {
   inp.click();
 }
 
+function startEdit(labelEl, it) {
+  const input = document.createElement("input");
+  input.type = "text"; input.className = "edit-input"; input.value = it.x;
+  labelEl.replaceWith(input);
+  input.focus(); input.select();
+  let done = false;
+  const commit = (saveIt) => {
+    if (done) return; done = true;
+    if (saveIt) { const v = input.value.trim(); if (v) it.x = v; }
+    save(); render();
+  };
+  input.addEventListener("keydown", e => {
+    if (e.key === "Enter") { e.preventDefault(); commit(true); }
+    else if (e.key === "Escape") { e.preventDefault(); commit(false); }
+  });
+  input.addEventListener("blur", () => commit(true));
+}
+
 function render() {
   // Richtungs-Tabs
   const routesEl = document.getElementById("routes");
@@ -629,11 +650,14 @@ function render() {
       rowEl.innerHTML = `
         <span class="box"><svg viewBox="0 0 24 24"><polyline points="4 12 10 18 20 6"/></svg></span>
         <span class="label">${escapeHtml(it.x)}</span>
+        <button class="edit-btn" title="Text bearbeiten">✏️</button>
         <button class="attach-btn" title="Anhang hinzufügen">📎</button>
         <button class="del" title="Entfernen">×</button>`;
-      rowEl.querySelector(".label").addEventListener("click", () => { it.done = !it.done; save(); render(); });
+      const labelEl = rowEl.querySelector(".label");
+      labelEl.addEventListener("click", () => { it.done = !it.done; save(); render(); });
       rowEl.querySelector(".box").addEventListener("click", () => { it.done = !it.done; save(); render(); });
       rowEl.querySelector(".del").addEventListener("click", (ev) => { ev.stopPropagation(); sec.items.splice(ii,1); save(); render(); });
+      rowEl.querySelector(".edit-btn").addEventListener("click", (ev) => { ev.stopPropagation(); startEdit(labelEl, it); });
       li.appendChild(rowEl);
 
       const menu = document.createElement("div");
