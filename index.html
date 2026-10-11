@@ -122,6 +122,16 @@
   .routes { display: flex; gap: .4rem; margin: .55rem 0 .2rem; }
   .route-tab { flex: 1; border: 1px solid var(--border); background: var(--bg); color: var(--muted); border-radius: 9px; padding: .45rem .5rem; font-size: .82rem; font-weight: 600; cursor: pointer; transition: all .12s; }
   .route-tab.active { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
+  .flights { background: var(--card); border: 1px solid var(--border); border-radius: 14px; box-shadow: var(--shadow); padding: .7rem .85rem; margin-bottom: 1rem; }
+  .flights-head { display: flex; align-items: center; gap: .4rem; font-weight: 600; font-size: .95rem; margin-bottom: .2rem; }
+  .flight-row { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem .5rem; padding: .5rem 0 .3rem; }
+  .flight-row + .flight-row { border-top: 1px solid var(--border); }
+  .flight-dir { flex: 1 1 100%; font-size: .8rem; color: var(--muted); font-weight: 600; }
+  .flight-row input { border: 1px solid var(--border); background: var(--bg); color: var(--text); border-radius: 8px; padding: .42rem .5rem; font-size: .85rem; font-family: inherit; outline: none; }
+  .flight-row input:focus { border-color: var(--accent); }
+  .f-no { flex: 2 1 120px; min-width: 96px; text-transform: uppercase; }
+  .f-date { flex: 1 1 150px; }
+  .f-time { flex: 1 1 110px; }
   .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.45); display: flex; align-items: flex-start; justify-content: center; padding: 2rem 1rem; z-index: 50; overflow-y: auto; }
   .panel { background: var(--card); color: var(--text); width: 100%; max-width: 640px; border-radius: 16px; box-shadow: var(--shadow); overflow: hidden; }
   .panel-head { display: flex; align-items: center; gap: .6rem; padding: .9rem 1rem; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--card); }
@@ -162,6 +172,7 @@
 </header>
 
 <main>
+  <div id="flights" class="flights"></div>
   <div class="done-banner" id="banner">✅ All done – have a great trip!</div>
   <div id="list"></div>
   <div class="toolbar">
@@ -762,6 +773,28 @@ function startEdit(labelEl, it) {
   input.addEventListener("blur", () => commit(true));
 }
 
+function renderFlights() {
+  const el = document.getElementById("flights");
+  const f = state.flights = state.flights || {};
+  f.outbound = f.outbound || {}; f.ret = f.ret || {};
+  const leg = (key, dir, o) => `
+    <div class="flight-row">
+      <span class="flight-dir">✈️ ${dir}</span>
+      <input class="f-no" data-leg="${key}" data-k="no" placeholder="Flight no." value="${escapeHtml(o.no || "")}">
+      <input class="f-date" type="date" data-leg="${key}" data-k="date" value="${escapeHtml(o.date || "")}">
+      <input class="f-time" type="time" data-leg="${key}" data-k="time" value="${escapeHtml(o.time || "")}">
+    </div>`;
+  el.innerHTML = `<div class="flights-head">✈️ Flights (round trip)</div>` +
+    leg("outbound", "Lörrach → Vilamoura", f.outbound) +
+    leg("ret", "Vilamoura → Lörrach", f.ret);
+  el.querySelectorAll("input").forEach(inp => {
+    inp.addEventListener("input", () => {
+      (state.flights[inp.dataset.leg] = state.flights[inp.dataset.leg] || {})[inp.dataset.k] = inp.value;
+      save();
+    });
+  });
+}
+
 function render() {
   // Richtungs-Tabs
   const routesEl = document.getElementById("routes");
@@ -969,6 +1002,7 @@ let state = { active: "loe-vil", routes: { "loe-vil": { sections: [], archives: 
   state = await load();
   initialized = true;
   save();      // gemergte Bereiche / Migration sichern
+  renderFlights();
   render();
 })();
 </script>
