@@ -776,7 +776,13 @@ function startEdit(labelEl, it) {
 function renderFlights() {
   const el = document.getElementById("flights");
   const f = state.flights = state.flights || {};
-  f.outbound = f.outbound || {}; f.ret = f.ret || {};
+  // Migration früherer Schlüssel: outbound = Basel→Faro, ret = Faro→Basel
+  if ((f.outbound || f.ret) && !f.faroBsl && !f.bslFaro) {
+    f.faroBsl = f.ret || {};
+    f.bslFaro = f.outbound || {};
+    delete f.outbound; delete f.ret;
+  }
+  f.faroBsl = f.faroBsl || {}; f.bslFaro = f.bslFaro || {};
   const leg = (key, dir, o) => `
     <div class="flight-row">
       <span class="flight-dir">✈️ ${dir}</span>
@@ -785,8 +791,8 @@ function renderFlights() {
       <input class="f-time" type="time" data-leg="${key}" data-k="time" value="${escapeHtml(o.time || "")}">
     </div>`;
   el.innerHTML = `<div class="flights-head">✈️ Flights (round trip)</div>` +
-    leg("outbound", "Lörrach → Vilamoura", f.outbound) +
-    leg("ret", "Vilamoura → Lörrach", f.ret);
+    leg("faroBsl", "Faro (FAO) → Basel (BSL)", f.faroBsl) +
+    leg("bslFaro", "Basel (BSL) → Faro (FAO)", f.bslFaro);
   el.querySelectorAll("input").forEach(inp => {
     inp.addEventListener("input", () => {
       (state.flights[inp.dataset.leg] = state.flights[inp.dataset.leg] || {})[inp.dataset.k] = inp.value;
