@@ -681,7 +681,8 @@ async function load() {
     st.routes[r.id].archives = st.routes[r.id].archives || [];
     mergeDefaults(st.routes[r.id], r.def);
   });
-  if (!st.active || !st.routes[st.active]) st.active = "loe-vil";
+  if (!st.prefDirSet) { st.active = "vil-loe"; st.prefDirSet = true; }   // trips start in Portugal (einmalig)
+  if (!st.active || !st.routes[st.active]) st.active = "vil-loe";
   applyContentMigrations(st);
   return st;
 }
@@ -1003,7 +1004,7 @@ async function resetAll() {
 }
 function escapeHtml(s){ return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
-let state = { active: "loe-vil", routes: { "loe-vil": { sections: [], archives: [] } } };
+let state = { active: "vil-loe", routes: { "vil-loe": { sections: [], archives: [] } } };
 (async function init() {
   state = await load();
   initialized = true;
