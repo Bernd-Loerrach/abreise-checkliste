@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#2563eb">
-<title>Abreise-Checkliste · Lörrach → Portugal</title>
+<title>Departure Checklist · Lörrach ⇄ Vilamoura</title>
 <style>
   :root {
     --bg: #f4f6fb;
@@ -151,7 +151,7 @@
 <body>
 <header>
   <div class="wrap">
-    <h1>🧳 Abreise-Checkliste</h1>
+    <h1>🧳 Departure Checklist</h1>
     <div class="routes" id="routes"></div>
     <p class="sub" id="sub"></p>
     <div class="progress-row">
@@ -162,205 +162,205 @@
 </header>
 
 <main>
-  <div class="done-banner" id="banner">✅ Alles erledigt – gute Reise!</div>
+  <div class="done-banner" id="banner">✅ All done – have a great trip!</div>
   <div id="list"></div>
   <div class="toolbar">
-    <button onclick="archiveAndRestart()">📁 Reise archivieren &amp; neu starten</button>
-    <button onclick="openArchives()">📚 Archivierte Reisen <span id="archCount"></span></button>
-    <button onclick="resetChecks()">↺ Häkchen zurücksetzen</button>
-    <button onclick="resetAll()">🗑 Auf Standard zurücksetzen</button>
+    <button onclick="archiveAndRestart()">📁 Archive trip &amp; start fresh</button>
+    <button onclick="openArchives()">📚 Archived trips <span id="archCount"></span></button>
+    <button onclick="resetChecks()">↺ Reset checkmarks</button>
+    <button onclick="resetAll()">🗑 Reset to default</button>
   </div>
-  <footer>Fortschritt wird automatisch in diesem Browser gespeichert.</footer>
+  <footer>Progress is saved automatically in this browser.</footer>
 </main>
 
 <script>
 const STORAGE = "abreise-checkliste-v1";
 
 const DEFAULT_LOE_VIL = [
-  { t: "Vor der Abreise erledigen", e: "🛒", items: [
-    "Flüge buchen",
-    "Maciek (Taxi) zum Flughafen buchen",
-    "Online einchecken",
-    "Koffer packen & Gewicht prüfen",
-    "Bargeld abheben (Euro)",
-    "Medikamente / Rezepte besorgen",
-    "Wichtige Post & Rechnungen erledigen",
-    "Freunde & Familie über Abreise informieren",
-    "Africa Twin zu Alex bringen",
-    "Handy & Powerbank vollladen",
+  { t: "Before departure", e: "🛒", items: [
+    "Book flights",
+    "Book Maciek (taxi) to the airport",
+    "Check in online",
+    "Pack suitcase & check weight",
+    "Withdraw cash (euros)",
+    "Get medication / prescriptions",
+    "Deal with important mail & bills",
+    "Tell friends & family about the trip",
+    "Take Africa Twin to Alex",
+    "Fully charge phone & power bank",
   ]},
-  { t: "Küche & Kühlschrank", e: "🧊", items: [
-    "Kühlschrank leeren (verderbliche Lebensmittel)",
-    "Kühlschrank ausschalten / abtauen lassen",
-    "Kühlschranktür offen lassen (gegen Schimmel)",
-    "Gefrierfach abtauen & Tür offen lassen",
-    "Herd & Backofen aus, Gas zudrehen",
-    "Kaffeemaschine / Wasserkocher aus & leeren",
-    "Spülmaschine leeren",
-    "Obstschale leeren",
+  { t: "Kitchen & fridge", e: "🧊", items: [
+    "Empty fridge (perishable food)",
+    "Turn off fridge / let it defrost",
+    "Leave fridge door open (prevents mold)",
+    "Defrost freezer & leave door open",
+    "Stove & oven off, turn off gas",
+    "Coffee maker / kettle off & emptied",
+    "Empty dishwasher",
+    "Empty fruit bowl",
   ]},
-  { t: "Fenster, Türen & Rollläden", e: "🪟", items: [
-    "Alle Fenster schließen (auch Dachfenster/Kipp)",
-    "Balkon-/Terrassentür abschließen",
-    "Rollläden/Jalousien herunterlassen",
-    "Wohnungstür abschließen (2× ziehen)",
-    "Briefkasten geleert / Nachsendung aktiv",
+  { t: "Windows, doors & shutters", e: "🪟", items: [
+    "Close all windows (incl. skylights / tilt)",
+    "Lock balcony / patio door",
+    "Lower shutters / blinds",
+    "Lock flat door (pull twice)",
+    "Mailbox emptied / mail forwarding on",
   ]},
-  { t: "Strom & Elektrogeräte", e: "🔌", items: [
-    "Stand-by-Geräte vom Strom (TV, Konsole, Ladegeräte)",
-    "Mehrfachsteckdosen ausschalten",
-    "WLAN-Router (lassen? für Smart-Home prüfen)",
-    "Bügeleisen / Heizlüfter sicher aus",
-    "Zeitschaltuhr für Lampen einstellen (Sicherheit)",
+  { t: "Power & electronics", e: "🔌", items: [
+    "Unplug standby devices (TV, console, chargers)",
+    "Switch off power strips",
+    "Wi-Fi router (leave on? check for smart home)",
+    "Iron / space heater safely off",
+    "Set timer for lamps (security)",
   ]},
-  { t: "Wasser & Heizung", e: "🚰", items: [
-    "Haupt-Wasserhahn zudrehen",
-    "Waschmaschinen-Wasserhahn zudrehen",
-    "Heizung auf Frostschutz / Sparmodus stellen",
-    "Boiler / Warmwasser reduzieren oder aus",
-    "Spül- & Waschmaschine: Türen offen lassen",
+  { t: "Water & heating", e: "🚰", items: [
+    "Turn off main water valve",
+    "Turn off washing machine valve",
+    "Set heating to frost protection / eco",
+    "Reduce or switch off boiler / hot water",
+    "Dishwasher & washing machine: leave doors open",
   ]},
-  { t: "Pflanzen, Müll & Tiere", e: "🪴", items: [
-    "Pflanzen gründlich gießen",
-    "Bewässerung / Nachbar für Pflanzen organisiert",
-    "Alle Mülleimer leeren (auch Bad)",
-    "Restmüll wegbringen",
-    "Biomüll wegbringen",
-    "Gelber Sack / Verpackungen wegbringen",
-    "Papier & Glas wegbringen",
+  { t: "Plants, waste & pets", e: "🪴", items: [
+    "Water plants thoroughly",
+    "Watering / neighbor for plants arranged",
+    "Empty all bins (incl. bathroom)",
+    "Take out general waste",
+    "Take out organic waste",
+    "Take out recycling / packaging",
+    "Take out paper & glass",
   ]},
-  { t: "Sicherheit & Organisatorisches", e: "🔐", items: [
-    "Nachbar/Vertrauensperson informiert",
-    "Schlüssel hinterlegt (Notfall)",
-    "Wertsachen sicher verstaut",
-    "Rauchmelder funktionsfähig",
-    "Termine / Lieferungen pausiert",
+  { t: "Security & admin", e: "🔐", items: [
+    "Neighbor / trusted person informed",
+    "Spare key left with someone (emergency)",
+    "Valuables stored safely",
+    "Smoke detectors working",
+    "Appointments / deliveries paused",
   ]},
-  { t: "Reisegepäck & Dokumente", e: "🛂", items: [
-    "Reisepass / Personalausweis",
-    "Geldbeutel, Bankkarten, Bargeld (Euro)",
-    "Ladegeräte & Powerbank",
-    "Medikamente",
-    "Auto-Papiere & grüne Versicherungskarte",
-    "Schlüssel 2. Wohnsitz Portugal",
-    "Handy-Ladestand & Offline-Karten",
+  { t: "Luggage & documents", e: "🛂", items: [
+    "Passport / ID card",
+    "Wallet, bank cards, cash (euros)",
+    "Chargers & power bank",
+    "Medication",
+    "Car papers & green insurance card",
+    "Keys for second home in Portugal",
+    "Phone charge & offline maps",
   ]},
-  { t: "Letzter Rundgang", e: "🚪", items: [
-    "Müll runtertragen / wegbringen",
-    "Alle Lichter aus (außer Zeitschaltuhr)",
-    "Wasser nirgends läuft",
-    "Letzter Blick: Herd, Fenster, Türen",
-    "Tür abgeschlossen – zum Flughafen! ✈️",
+  { t: "Final walk-through", e: "🚪", items: [
+    "Take out the rubbish",
+    "All lights off (except timer)",
+    "No water running anywhere",
+    "Final check: stove, windows, doors",
+    "Door locked – off to the airport! ✈️",
   ]},
-  { t: "Nach Ankunft in Portugal", e: "🌴", items: [
-    "Sicher angekommen: Familie Bescheid geben",
-    "Wasser, Strom & Gas aufdrehen",
-    "Wohnung gründlich lüften",
-    "Motorräder vom Ladegerät nehmen / startklar machen",
-    "Auto startklar machen (Batterie, Reifen)",
-    "Katzen versorgen / begrüßen",
-    "Kühlschrank einschalten & befüllen",
-    "Grundvorräte einkaufen",
-    "Freunde & Nachbarn kontaktieren",
-    "Internet / WLAN-Router prüfen",
-    "Pflanzen & Garten checken",
-    "Müll- & Recycling-Termine herausfinden",
+  { t: "After arriving in Portugal", e: "🌴", items: [
+    "Arrived safely: let family know",
+    "Turn on water, power & gas",
+    "Air out the place thoroughly",
+    "Take motorcycles off charger / get them ready",
+    "Get the car ready (battery, tires)",
+    "Feed / greet the cats",
+    "Turn on & stock the fridge",
+    "Buy basic groceries",
+    "Contact friends & neighbors",
+    "Check internet / Wi-Fi router",
+    "Check plants & garden",
+    "Find out waste & recycling days",
   ]},
 ];
 
-// Rückrichtung: Vilamoura-Haus verlassen, Ankunft in Lörrach
+// Return direction: leaving the Vilamoura home, arriving in Lörrach
 const DEFAULT_VIL_LOE = [
-  { t: "Vor der Abreise erledigen", e: "🛒", items: [
-    "Flüge buchen",
-    "Bolt / Uber zum Flughafen buchen",
-    "Online einchecken",
-    "Koffer packen & Gewicht prüfen",
-    "Bargeld abheben",
-    "Medikamente / Rezepte besorgen",
-    "Wichtige Post & Rechnungen erledigen",
-    "Freunde & Nachbarn über Abreise informieren",
-    "Handy & Powerbank vollladen",
+  { t: "Before departure", e: "🛒", items: [
+    "Book flights",
+    "Book Bolt / Uber to the airport",
+    "Check in online",
+    "Pack suitcase & check weight",
+    "Withdraw cash",
+    "Get medication / prescriptions",
+    "Deal with important mail & bills",
+    "Tell friends & neighbors about the trip",
+    "Fully charge phone & power bank",
   ]},
-  { t: "Motorräder & Garage", e: "🏍️", items: [
-    "Motorräder volltanken",
-    "Motorräder ans Erhaltungs-Ladegerät hängen",
-    "Motorräder abdecken / sichern",
-    "Auto volltanken & abstellen",
-    "Auto-Batterie ans Erhaltungsladegerät / abklemmen",
-    "Garage / Stellplatz abschließen",
+  { t: "Motorcycles & garage", e: "🏍️", items: [
+    "Fill up motorcycles",
+    "Put motorcycles on trickle charger",
+    "Cover / secure motorcycles",
+    "Fill up & park the car",
+    "Car battery on trickle charger / disconnect",
+    "Lock garage / parking space",
   ]},
-  { t: "Küche & Kühlschrank", e: "🧊", items: [
-    "Kühlschrank leeren (verderbliche Lebensmittel)",
-    "Kühlschrank ausschalten / abtauen lassen",
-    "Kühlschranktür offen lassen (gegen Schimmel)",
-    "Gefrierfach abtauen & Tür offen lassen",
-    "Herd & Backofen aus, Gas zudrehen",
-    "Kaffeemaschine / Wasserkocher aus & leeren",
-    "Spülmaschine leeren",
-    "Obstschale leeren",
+  { t: "Kitchen & fridge", e: "🧊", items: [
+    "Empty fridge (perishable food)",
+    "Turn off fridge / let it defrost",
+    "Leave fridge door open (prevents mold)",
+    "Defrost freezer & leave door open",
+    "Stove & oven off, turn off gas",
+    "Coffee maker / kettle off & emptied",
+    "Empty dishwasher",
+    "Empty fruit bowl",
   ]},
-  { t: "Fenster, Türen & Persianas", e: "🪟", items: [
-    "Alle Fenster & Schiebetüren schließen",
-    "Terrassen-/Balkontür abschließen",
-    "Persianas / Rollläden herunterlassen",
-    "Markise einfahren",
-    "Haustür abschließen",
+  { t: "Windows, doors & persianas", e: "🪟", items: [
+    "Close all windows & sliding doors",
+    "Lock patio / balcony door",
+    "Lower persianas / shutters",
+    "Retract awning",
+    "Lock front door",
   ]},
-  { t: "Strom & Klimaanlage", e: "🔌", items: [
-    "Stand-by-Geräte vom Strom (TV, Ladegeräte)",
-    "Mehrfachsteckdosen ausschalten",
-    "Klimaanlage & Ventilatoren aus",
-    "WLAN-Router (lassen? für Smart-Home prüfen)",
-    "Zeitschaltuhr für Lampen einstellen (Sicherheit)",
+  { t: "Power & air conditioning", e: "🔌", items: [
+    "Unplug standby devices (TV, chargers)",
+    "Switch off power strips",
+    "Air conditioning & fans off",
+    "Wi-Fi router (leave on? check for smart home)",
+    "Set timer for lamps (security)",
   ]},
-  { t: "Wasser, Pool & Außenbereich", e: "🚰", items: [
-    "Haupt-Wasserhahn zudrehen",
-    "Boiler / Warmwasser ausschalten",
-    "Pool-Pflege / Service organisiert",
-    "Außenmöbel & Polster sichern / verstauen",
-    "Spül- & Waschmaschine: Türen offen lassen",
+  { t: "Water, pool & outdoors", e: "🚰", items: [
+    "Turn off main water valve",
+    "Switch off boiler / hot water",
+    "Pool care / service arranged",
+    "Secure / store outdoor furniture & cushions",
+    "Dishwasher & washing machine: leave doors open",
   ]},
-  { t: "Pflanzen, Müll & Tiere", e: "🪴", items: [
-    "Pflanzen gründlich gießen",
-    "Bewässerung / Nachbar für Pflanzen organisiert",
-    "Alle Mülleimer leeren (auch Bad)",
-    "Müll & Recycling wegbringen (Contentores)",
-    "Katzensitter für 2 Katzen organisiert",
+  { t: "Plants, waste & pets", e: "🪴", items: [
+    "Water plants thoroughly",
+    "Watering / neighbor for plants arranged",
+    "Empty all bins (incl. bathroom)",
+    "Take out waste & recycling (contentores)",
+    "Cat sitter for 2 cats arranged",
   ]},
-  { t: "Sicherheit & Organisatorisches", e: "🔐", items: [
-    "Nachbar / Vertrauensperson informiert",
-    "Schlüssel hinterlegt (Notfall)",
-    "Wertsachen sicher verstaut",
-    "Alarmanlage scharf stellen",
-    "Termine / Lieferungen pausiert",
+  { t: "Security & admin", e: "🔐", items: [
+    "Neighbor / trusted person informed",
+    "Spare key left with someone (emergency)",
+    "Valuables stored safely",
+    "Arm the alarm system",
+    "Appointments / deliveries paused",
   ]},
-  { t: "Reisegepäck & Dokumente", e: "🛂", items: [
-    "Reisepass / Personalausweis",
-    "Geldbeutel, Bankkarten, Bargeld",
-    "Ladegeräte & Powerbank",
-    "Medikamente",
-    "Auto-Papiere & grüne Versicherungskarte",
-    "Schlüssel Wohnung Lörrach",
-    "Handy-Ladestand & Offline-Karten",
+  { t: "Luggage & documents", e: "🛂", items: [
+    "Passport / ID card",
+    "Wallet, bank cards, cash",
+    "Chargers & power bank",
+    "Medication",
+    "Car papers & green insurance card",
+    "Keys for Lörrach flat",
+    "Phone charge & offline maps",
   ]},
-  { t: "Letzter Rundgang", e: "🚪", items: [
-    "Müll wegbringen",
-    "Alle Lichter aus (außer Zeitschaltuhr)",
-    "Wasser nirgends läuft",
-    "Letzter Blick: Herd, Klima, Fenster, Türen",
-    "Tür abgeschlossen – zum Flughafen! ✈️",
+  { t: "Final walk-through", e: "🚪", items: [
+    "Take out the rubbish",
+    "All lights off (except timer)",
+    "No water running anywhere",
+    "Final check: stove, A/C, windows, doors",
+    "Door locked – off to the airport! ✈️",
   ]},
-  { t: "Nach Ankunft in Lörrach", e: "🏠", items: [
-    "Sicher angekommen: Familie Bescheid geben",
-    "Wasser, Strom & Gas aufdrehen",
-    "Heizung hochstellen / einschalten",
-    "Wohnung gründlich lüften",
-    "Kühlschrank einschalten & befüllen",
-    "Grundvorräte einkaufen",
-    "Africa Twin bei Alex abholen",
-    "Freunde & Nachbarn kontaktieren",
-    "Internet / WLAN-Router prüfen",
-    "Post / Nachsendung holen",
+  { t: "After arriving in Lörrach", e: "🏠", items: [
+    "Arrived safely: let family know",
+    "Turn on water, power & gas",
+    "Turn up / switch on heating",
+    "Air out the place thoroughly",
+    "Turn on & stock the fridge",
+    "Buy basic groceries",
+    "Pick up Africa Twin from Alex",
+    "Contact friends & neighbors",
+    "Check internet / Wi-Fi router",
+    "Collect mail / forwarded post",
   ]},
 ];
 
@@ -369,6 +369,147 @@ const ROUTES = [
   { id: "loe-vil", label: "Lörrach → Vilamoura", from: "Lörrach", to: "Vilamoura", def: DEFAULT_LOE_VIL },
   { id: "vil-loe", label: "Vilamoura → Lörrach", from: "Vilamoura", to: "Lörrach", def: DEFAULT_VIL_LOE },
 ];
+
+// ---------- Einmalige Sprach-Migration: bestehende deutsche Daten → Englisch ----------
+const TITLE_MAP = {
+  "Vor der Abreise erledigen": "Before departure",
+  "Motorräder & Garage": "Motorcycles & garage",
+  "Küche & Kühlschrank": "Kitchen & fridge",
+  "Fenster, Türen & Rollläden": "Windows, doors & shutters",
+  "Fenster, Türen & Persianas": "Windows, doors & persianas",
+  "Strom & Elektrogeräte": "Power & electronics",
+  "Strom & Klimaanlage": "Power & air conditioning",
+  "Wasser & Heizung": "Water & heating",
+  "Wasser, Pool & Außenbereich": "Water, pool & outdoors",
+  "Pflanzen, Müll & Tiere": "Plants, waste & pets",
+  "Sicherheit & Organisatorisches": "Security & admin",
+  "Reisegepäck & Dokumente": "Luggage & documents",
+  "Letzter Rundgang": "Final walk-through",
+  "Nach Ankunft in Portugal": "After arriving in Portugal",
+  "Nach Ankunft in Lörrach": "After arriving in Lörrach",
+};
+const ITEM_MAP = {
+  "Flüge buchen": "Book flights",
+  "Maciek (Taxi) zum Flughafen buchen": "Book Maciek (taxi) to the airport",
+  "Bolt / Uber zum Flughafen buchen": "Book Bolt / Uber to the airport",
+  "Online einchecken": "Check in online",
+  "Koffer packen & Gewicht prüfen": "Pack suitcase & check weight",
+  "Bargeld abheben (Euro)": "Withdraw cash (euros)",
+  "Bargeld abheben": "Withdraw cash",
+  "Medikamente / Rezepte besorgen": "Get medication / prescriptions",
+  "Wichtige Post & Rechnungen erledigen": "Deal with important mail & bills",
+  "Freunde & Familie über Abreise informieren": "Tell friends & family about the trip",
+  "Freunde & Nachbarn über Abreise informieren": "Tell friends & neighbors about the trip",
+  "Africa Twin zu Alex bringen": "Take Africa Twin to Alex",
+  "Handy & Powerbank vollladen": "Fully charge phone & power bank",
+  "Motorräder volltanken": "Fill up motorcycles",
+  "Motorräder ans Erhaltungs-Ladegerät hängen": "Put motorcycles on trickle charger",
+  "Motorräder abdecken / sichern": "Cover / secure motorcycles",
+  "Auto volltanken & abstellen": "Fill up & park the car",
+  "Auto-Batterie ans Erhaltungsladegerät / abklemmen": "Car battery on trickle charger / disconnect",
+  "Garage / Stellplatz abschließen": "Lock garage / parking space",
+  "Kühlschrank leeren (verderbliche Lebensmittel)": "Empty fridge (perishable food)",
+  "Kühlschrank ausschalten / abtauen lassen": "Turn off fridge / let it defrost",
+  "Kühlschranktür offen lassen (gegen Schimmel)": "Leave fridge door open (prevents mold)",
+  "Gefrierfach abtauen & Tür offen lassen": "Defrost freezer & leave door open",
+  "Herd & Backofen aus, Gas zudrehen": "Stove & oven off, turn off gas",
+  "Kaffeemaschine / Wasserkocher aus & leeren": "Coffee maker / kettle off & emptied",
+  "Spülmaschine leeren": "Empty dishwasher",
+  "Obstschale leeren": "Empty fruit bowl",
+  "Alle Fenster schließen (auch Dachfenster/Kipp)": "Close all windows (incl. skylights / tilt)",
+  "Balkon-/Terrassentür abschließen": "Lock balcony / patio door",
+  "Rollläden/Jalousien herunterlassen": "Lower shutters / blinds",
+  "Wohnungstür abschließen (2× ziehen)": "Lock flat door (pull twice)",
+  "Briefkasten geleert / Nachsendung aktiv": "Mailbox emptied / mail forwarding on",
+  "Alle Fenster & Schiebetüren schließen": "Close all windows & sliding doors",
+  "Terrassen-/Balkontür abschließen": "Lock patio / balcony door",
+  "Persianas / Rollläden herunterlassen": "Lower persianas / shutters",
+  "Markise einfahren": "Retract awning",
+  "Haustür abschließen": "Lock front door",
+  "Stand-by-Geräte vom Strom (TV, Konsole, Ladegeräte)": "Unplug standby devices (TV, console, chargers)",
+  "Stand-by-Geräte vom Strom (TV, Ladegeräte)": "Unplug standby devices (TV, chargers)",
+  "Mehrfachsteckdosen ausschalten": "Switch off power strips",
+  "WLAN-Router (lassen? für Smart-Home prüfen)": "Wi-Fi router (leave on? check for smart home)",
+  "Bügeleisen / Heizlüfter sicher aus": "Iron / space heater safely off",
+  "Zeitschaltuhr für Lampen einstellen (Sicherheit)": "Set timer for lamps (security)",
+  "Klimaanlage & Ventilatoren aus": "Air conditioning & fans off",
+  "Haupt-Wasserhahn zudrehen": "Turn off main water valve",
+  "Waschmaschinen-Wasserhahn zudrehen": "Turn off washing machine valve",
+  "Heizung auf Frostschutz / Sparmodus stellen": "Set heating to frost protection / eco",
+  "Boiler / Warmwasser reduzieren oder aus": "Reduce or switch off boiler / hot water",
+  "Boiler / Warmwasser ausschalten": "Switch off boiler / hot water",
+  "Pool-Pflege / Service organisiert": "Pool care / service arranged",
+  "Außenmöbel & Polster sichern / verstauen": "Secure / store outdoor furniture & cushions",
+  "Spül- & Waschmaschine: Türen offen lassen": "Dishwasher & washing machine: leave doors open",
+  "Pflanzen gründlich gießen": "Water plants thoroughly",
+  "Bewässerung / Nachbar für Pflanzen organisiert": "Watering / neighbor for plants arranged",
+  "Alle Mülleimer leeren (auch Bad)": "Empty all bins (incl. bathroom)",
+  "Restmüll wegbringen": "Take out general waste",
+  "Biomüll wegbringen": "Take out organic waste",
+  "Gelber Sack / Verpackungen wegbringen": "Take out recycling / packaging",
+  "Papier & Glas wegbringen": "Take out paper & glass",
+  "Müll & Recycling wegbringen (Contentores)": "Take out waste & recycling (contentores)",
+  "Katzensitter für 2 Katzen organisiert": "Cat sitter for 2 cats arranged",
+  "Nachbar/Vertrauensperson informiert": "Neighbor / trusted person informed",
+  "Nachbar / Vertrauensperson informiert": "Neighbor / trusted person informed",
+  "Schlüssel hinterlegt (Notfall)": "Spare key left with someone (emergency)",
+  "Wertsachen sicher verstaut": "Valuables stored safely",
+  "Rauchmelder funktionsfähig": "Smoke detectors working",
+  "Alarmanlage scharf stellen": "Arm the alarm system",
+  "Termine / Lieferungen pausiert": "Appointments / deliveries paused",
+  "Reisepass / Personalausweis": "Passport / ID card",
+  "Geldbeutel, Bankkarten, Bargeld (Euro)": "Wallet, bank cards, cash (euros)",
+  "Geldbeutel, Bankkarten, Bargeld": "Wallet, bank cards, cash",
+  "Ladegeräte & Powerbank": "Chargers & power bank",
+  "Medikamente": "Medication",
+  "Auto-Papiere & grüne Versicherungskarte": "Car papers & green insurance card",
+  "Schlüssel 2. Wohnsitz Portugal": "Keys for second home in Portugal",
+  "Schlüssel Wohnung Lörrach": "Keys for Lörrach flat",
+  "Handy-Ladestand & Offline-Karten": "Phone charge & offline maps",
+  "Müll runtertragen / wegbringen": "Take out the rubbish",
+  "Müll wegbringen": "Take out the rubbish",
+  "Alle Lichter aus (außer Zeitschaltuhr)": "All lights off (except timer)",
+  "Wasser nirgends läuft": "No water running anywhere",
+  "Letzter Blick: Herd, Fenster, Türen": "Final check: stove, windows, doors",
+  "Letzter Blick: Herd, Klima, Fenster, Türen": "Final check: stove, A/C, windows, doors",
+  "Tür abgeschlossen – zum Flughafen! ✈️": "Door locked – off to the airport! ✈️",
+  "Sicher angekommen: Familie Bescheid geben": "Arrived safely: let family know",
+  "Wasser, Strom & Gas aufdrehen": "Turn on water, power & gas",
+  "Wohnung gründlich lüften": "Air out the place thoroughly",
+  "Motorräder vom Ladegerät nehmen / startklar machen": "Take motorcycles off charger / get them ready",
+  "Auto startklar machen (Batterie, Reifen)": "Get the car ready (battery, tires)",
+  "Katzen versorgen / begrüßen": "Feed / greet the cats",
+  "Kühlschrank einschalten & befüllen": "Turn on & stock the fridge",
+  "Grundvorräte einkaufen": "Buy basic groceries",
+  "Freunde & Nachbarn kontaktieren": "Contact friends & neighbors",
+  "Internet / WLAN-Router prüfen": "Check internet / Wi-Fi router",
+  "Pflanzen & Garten checken": "Check plants & garden",
+  "Müll- & Recycling-Termine herausfinden": "Find out waste & recycling days",
+  "Heizung hochstellen / einschalten": "Turn up / switch on heating",
+  "Africa Twin bei Alex abholen": "Pick up Africa Twin from Alex",
+  "Post / Nachsendung holen": "Collect mail / forwarded post",
+  // ältere Varianten (für archivierte Schnappschüsse)
+  "Motorrad zu Alex bringen": "Take Africa Twin to Alex",
+  "Motorrad bei Alex abholen": "Pick up Africa Twin from Alex",
+  "Einkaufen für die Fahrt (Snacks, Getränke)": "Buy snacks & drinks for the trip",
+  "Auto volltanken": "Fill up the car",
+  "Auto checken: Reifen, Öl, Wischwasser": "Check car: tires, oil, washer fluid",
+  "Reiseroute / Übernachtung planen": "Plan route / overnight stay",
+  "Tür abgeschlossen – losfahren! 🚗": "Door locked – off we go! 🚗",
+  "Tierversorgung geklärt (falls vorhanden)": "Pet care arranged (if any)",
+  "Motorräder ans Ladegerät hängen": "Put motorcycles on charger",
+};
+function translateSection(sec) {
+  if (TITLE_MAP[sec.t]) sec.t = TITLE_MAP[sec.t];
+  (sec.items || []).forEach(it => { if (ITEM_MAP[it.x]) it.x = ITEM_MAP[it.x]; });
+}
+function translateState(st) {
+  Object.values(st.routes || {}).forEach(route => {
+    if (!route) return;
+    (route.sections || []).forEach(translateSection);
+    (route.archives || []).forEach(a => (a.sections || []).forEach(translateSection));
+  });
+}
 
 // Gezielte Inhalts-Anpassungen, die auch auf bereits gespeicherten Listen greifen (idempotent).
 const CONTENT_REV = 4;
@@ -517,6 +658,13 @@ async function load() {
     st = { active: "loe-vil", routes: {} };
   }
   st.routes = st.routes || {};
+  // Einmalige Sprach-Migration: alten deutschen Stand nach Englisch überführen
+  if (st.lang !== "en") {
+    Object.values(st.routes).forEach(r => { if (r && !r.sections) r.sections = []; });
+    applyContentMigrations(st);   // deutschen Inhalt erst auf aktuelle rev normalisieren
+    translateState(st);           // dann Titel, Punkte und Archive übersetzen
+    st.lang = "en";
+  }
   ROUTES.forEach(r => {
     if (!st.routes[r.id]) st.routes[r.id] = freshRoute(r.def);
     st.routes[r.id].archives = st.routes[r.id].archives || [];
@@ -529,7 +677,7 @@ async function load() {
 let saveTimer = null, initialized = false;
 function save() {
   clearTimeout(saveTimer);
-  saveTimer = setTimeout(() => { idbSet(KEY, state).catch(() => alert("Speicher voll – Anhang evtl. zu groß.")); }, 150);
+  saveTimer = setTimeout(() => { idbSet(KEY, state).catch(() => alert("Storage full – attachment may be too large.")); }, 150);
 }
 function flushSave() { if (!initialized) return; clearTimeout(saveTimer); idbSet(KEY, state).catch(() => {}); }
 document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") flushSave(); });
@@ -568,10 +716,10 @@ function openAttachment(a) {
   setTimeout(() => URL.revokeObjectURL(url), 60000);
 }
 function addLink(it) {
-  let url = prompt("Link-Adresse (URL):", "https://");
+  let url = prompt("Link address (URL):", "https://");
   if (!url) return;
   url = url.trim(); if (!/^https?:\/\//i.test(url)) url = "https://" + url;
-  const label = (prompt("Bezeichnung (optional):", "") || "").trim();
+  const label = (prompt("Label (optional):", "") || "").trim();
   (it.att = it.att || []).push({ k: "link", url, label });
   save(); render();
 }
@@ -591,7 +739,7 @@ function pickFile(it, accept) {
       const data = isImg ? await processImage(file) : await readFileAsDataURL(file);
       (it.att = it.att || []).push({ k: isImg ? "img" : "file", name: file.name, mime: file.type, data });
       save(); render();
-    } catch (e) { alert("Datei konnte nicht geladen werden."); }
+    } catch (e) { alert("Could not load the file."); }
   };
   inp.click();
 }
@@ -626,7 +774,7 @@ function render() {
     routesEl.appendChild(b);
   });
   const activeRoute = ROUTES.find(r => r.id === state.active);
-  document.getElementById("sub").textContent = activeRoute.from + " verlassen · Ankunft in " + activeRoute.to;
+  document.getElementById("sub").textContent = "Leaving " + activeRoute.from + " · Arriving in " + activeRoute.to;
 
   const list = document.getElementById("list");
   list.innerHTML = "";
@@ -650,9 +798,9 @@ function render() {
       rowEl.innerHTML = `
         <span class="box"><svg viewBox="0 0 24 24"><polyline points="4 12 10 18 20 6"/></svg></span>
         <span class="label">${escapeHtml(it.x)}</span>
-        <button class="edit-btn" title="Text bearbeiten">✏️</button>
-        <button class="attach-btn" title="Anhang hinzufügen">📎</button>
-        <button class="del" title="Entfernen">×</button>`;
+        <button class="edit-btn" title="Edit text">✏️</button>
+        <button class="attach-btn" title="Add attachment">📎</button>
+        <button class="del" title="Remove">×</button>`;
       const labelEl = rowEl.querySelector(".label");
       labelEl.addEventListener("click", () => { it.done = !it.done; save(); render(); });
       rowEl.querySelector(".box").addEventListener("click", () => { it.done = !it.done; save(); render(); });
@@ -662,7 +810,7 @@ function render() {
 
       const menu = document.createElement("div");
       menu.className = "attach-menu"; menu.style.display = "none";
-      menu.innerHTML = `<button data-a="link">🔗 Link</button><button data-a="photo">🖼 Foto</button><button data-a="file">📄 Datei</button>`;
+      menu.innerHTML = `<button data-a="link">🔗 Link</button><button data-a="photo">🖼 Photo</button><button data-a="file">📄 File</button>`;
       menu.querySelector('[data-a="link"]').addEventListener("click", () => { menu.style.display = "none"; addLink(it); });
       menu.querySelector('[data-a="photo"]').addEventListener("click", () => { menu.style.display = "none"; pickFile(it, "image/*"); });
       menu.querySelector('[data-a="file"]').addEventListener("click", () => { menu.style.display = "none"; pickFile(it); });
@@ -678,9 +826,9 @@ function render() {
         it.att.forEach((a, ai) => {
           const chip = document.createElement("span");
           chip.className = "att";
-          if (a.k === "img")      chip.innerHTML = `<img src="${a.data}" alt=""><span class="att-name">${escapeHtml(a.name || "Bild")}</span><button class="att-del" title="Entfernen">×</button>`;
-          else if (a.k === "file") chip.innerHTML = `<span>📄</span><span class="att-name">${escapeHtml(a.name || "Datei")}</span><button class="att-del" title="Entfernen">×</button>`;
-          else                     chip.innerHTML = `<span>🔗</span><span class="att-name">${escapeHtml(a.label || a.url)}</span><button class="att-del" title="Entfernen">×</button>`;
+          if (a.k === "img")      chip.innerHTML = `<img src="${a.data}" alt=""><span class="att-name">${escapeHtml(a.name || "Image")}</span><button class="att-del" title="Remove">×</button>`;
+          else if (a.k === "file") chip.innerHTML = `<span>📄</span><span class="att-name">${escapeHtml(a.name || "File")}</span><button class="att-del" title="Remove">×</button>`;
+          else                     chip.innerHTML = `<span>🔗</span><span class="att-name">${escapeHtml(a.label || a.url)}</span><button class="att-del" title="Remove">×</button>`;
           chip.addEventListener("click", () => openAttachment(a));
           chip.querySelector(".att-del").addEventListener("click", (ev) => { ev.stopPropagation(); it.att.splice(ai, 1); save(); render(); });
           atts.appendChild(chip);
@@ -693,7 +841,7 @@ function render() {
 
     const addRow = document.createElement("div");
     addRow.className = "add-row";
-    addRow.innerHTML = `<input type="text" placeholder="Eigenen Punkt hinzufügen…"><button>+</button>`;
+    addRow.innerHTML = `<input type="text" placeholder="Add your own item…"><button>+</button>`;
     const input = addRow.querySelector("input");
     const addFn = () => { const v = input.value.trim(); if (!v) return; sec.items.push({ x: v, done: false }); save(); render(); };
     addRow.querySelector("button").addEventListener("click", addFn);
@@ -721,9 +869,9 @@ function resetChecks() {
 // ---------- Reise archivieren & Verlauf ----------
 function archiveAndRestart() {
   const now = new Date();
-  const defName = "Reise " + now.toLocaleDateString("de-DE", { month: "long", year: "numeric" });
-  let name = prompt("Name für diese Reise (zum Archivieren):", defName);
-  if (name === null) return;              // abgebrochen
+  const defName = "Trip " + now.toLocaleDateString("en-GB", { month: "long", year: "numeric" });
+  let name = prompt("Name for this trip (to archive):", defName);
+  if (name === null) return;              // cancelled
   name = name.trim() || defName;
   cur().archives = cur().archives || [];
   cur().archives.unshift({
@@ -734,7 +882,7 @@ function archiveAndRestart() {
   });
   cur().sections.forEach(s => s.items.forEach(i => i.done = false));   // frisch starten
   save(); render();
-  alert("Gespeichert als „" + name + "“.\nDie Liste ist jetzt für die nächste Reise zurückgesetzt (Punkte & Anhänge bleiben erhalten).");
+  alert("Saved as “" + name + "”.\nThe list has been reset for your next trip (items & attachments are kept).");
 }
 
 function openArchives() {
@@ -753,25 +901,25 @@ function archStats(a) {
   return { done, total };
 }
 function renderArchiveList(panel, overlay) {
-  panel.innerHTML = `<div class="panel-head"><h2>📚 Archivierte Reisen</h2><button class="panel-close" title="Schließen">×</button></div>`;
+  panel.innerHTML = `<div class="panel-head"><h2>📚 Archived trips</h2><button class="panel-close" title="Close">×</button></div>`;
   panel.querySelector(".panel-close").addEventListener("click", () => overlay.remove());
   const archives = cur().archives || [];
   if (!archives.length) {
     const p = document.createElement("p"); p.className = "panel-empty";
-    p.textContent = "Noch keine Reisen archiviert. Über „📁 Reise archivieren & neu starten“ speicherst du den aktuellen Stand.";
+    p.textContent = "No trips archived yet. Use “📁 Archive trip & start fresh” to save the current state.";
     panel.appendChild(p); return;
   }
   const list = document.createElement("div"); list.className = "arch-list";
   archives.forEach(a => {
     const { done, total } = archStats(a);
-    const d = new Date(a.date).toLocaleDateString("de-DE", { day: "2-digit", month: "long", year: "numeric" });
+    const d = new Date(a.date).toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" });
     const row = document.createElement("div"); row.className = "arch-row";
-    row.innerHTML = `<div class="arch-info"><div class="arch-name"></div><div class="arch-meta">${d} · ${done}/${total} erledigt</div></div>
-      <button class="arch-view">Ansehen</button><button class="arch-del" title="Löschen">🗑</button>`;
+    row.innerHTML = `<div class="arch-info"><div class="arch-name"></div><div class="arch-meta">${d} · ${done}/${total} done</div></div>
+      <button class="arch-view">View</button><button class="arch-del" title="Delete">🗑</button>`;
     row.querySelector(".arch-name").textContent = a.name;
     row.querySelector(".arch-view").addEventListener("click", () => renderArchiveDetail(panel, overlay, a));
     row.querySelector(".arch-del").addEventListener("click", () => {
-      if (!confirm("Diese archivierte Reise löschen?")) return;
+      if (!confirm("Delete this archived trip?")) return;
       cur().archives = cur().archives.filter(x => x.id !== a.id);
       save(); render(); renderArchiveList(panel, overlay);
     });
@@ -780,7 +928,7 @@ function renderArchiveList(panel, overlay) {
   panel.appendChild(list);
 }
 function renderArchiveDetail(panel, overlay, a) {
-  panel.innerHTML = `<div class="panel-head"><button class="panel-back">‹ Zurück</button><h2></h2><button class="panel-close" title="Schließen">×</button></div>`;
+  panel.innerHTML = `<div class="panel-head"><button class="panel-back">‹ Back</button><h2></h2><button class="panel-close" title="Close">×</button></div>`;
   panel.querySelector("h2").textContent = a.name;
   panel.querySelector(".panel-back").addEventListener("click", () => renderArchiveList(panel, overlay));
   panel.querySelector(".panel-close").addEventListener("click", () => overlay.remove());
@@ -798,7 +946,7 @@ function renderArchiveDetail(panel, overlay, a) {
           const chip = document.createElement("span"); chip.className = "att";
           if (att.k === "img") chip.innerHTML = `<img src="${att.data}" alt=""><span class="att-name"></span>`;
           else chip.innerHTML = `<span>${att.k === "file" ? "📄" : "🔗"}</span><span class="att-name"></span>`;
-          chip.querySelector(".att-name").textContent = att.k === "link" ? (att.label || att.url) : (att.name || (att.k === "img" ? "Bild" : "Datei"));
+          chip.querySelector(".att-name").textContent = att.k === "link" ? (att.label || att.url) : (att.name || (att.k === "img" ? "Image" : "File"));
           chip.addEventListener("click", () => openAttachment(att));
           atts.appendChild(chip);
         });
@@ -810,7 +958,7 @@ function renderArchiveDetail(panel, overlay, a) {
 }
 async function resetAll() {
   const r = ROUTES.find(x => x.id === state.active);
-  if (!confirm("Liste „" + r.label + "“ auf den Standard zurücksetzen?\n(Eigene Punkte & Anhänge dieser Richtung gehen verloren. Der Verlauf und die andere Richtung bleiben.)")) return;
+  if (!confirm("Reset the “" + r.label + "” list to default?\n(Your own items & attachments for this direction will be lost. The history and the other direction are kept.)")) return;
   cur().sections = r.def.map(freshSection);
   save(); render();
 }
