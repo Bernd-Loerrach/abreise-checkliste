@@ -561,7 +561,13 @@
       });
       speak(card.pt);
       opts.onAnswer(ok);
-      setTimeout(opts.next, ok ? 750 : 1400);
+      // Pause on the result; advance only when the user taps Continue.
+      const contRow = el(`<div class="answer-row single" style="margin-top:18px">
+          <button class="ans good" id="qcont">Continue ›</button>
+        </div>`);
+      contRow.firstElementChild.addEventListener("click", opts.next);
+      optWrap.after(contRow);
+      contRow.scrollIntoView({ block: "nearest", behavior: "smooth" });
     }
 
     document.getElementById("exit").addEventListener("click", opts.exit);
