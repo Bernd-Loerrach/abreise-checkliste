@@ -162,6 +162,43 @@
     }
   }
 
+  // ---------- Verb conjugations (present tense, on demand) ----------
+  const PRONOUNS = ["eu", "tu", "ele / ela", "nós", "eles / elas"];
+  function hasConj(card) {
+    return typeof CONJ !== "undefined" && CONJ[card.pt];
+  }
+  function openConj(card) {
+    const forms = CONJ[card.pt];
+    const rows = forms
+      .map((f, i) =>
+        f
+          ? `<div class="conj-row"><span class="conj-pron">${PRONOUNS[i]}</span><span class="conj-form">${esc(f)}</span>${
+              speechAvailable ? `<button class="conj-say" data-f="${esc(f)}" aria-label="Speak">🔊</button>` : ""
+            }</div>`
+          : ""
+      )
+      .join("");
+    const overlay = el(`<div class="conj-overlay">
+        <div class="conj-sheet">
+          <div class="conj-head">
+            <div>
+              <div class="conj-title">${esc(card.pt)}</div>
+              <div class="conj-sub">${esc(card.en)} · present tense</div>
+            </div>
+            <button class="conj-close" aria-label="Close">✕</button>
+          </div>
+          ${rows}
+        </div>
+      </div>`);
+    const close = () => overlay.remove();
+    overlay.addEventListener("click", (e) => { if (e.target === overlay) close(); });
+    overlay.querySelector(".conj-close").addEventListener("click", close);
+    overlay.querySelectorAll(".conj-say").forEach((b) =>
+      b.addEventListener("click", (e) => { e.stopPropagation(); speak(b.dataset.f); })
+    );
+    document.body.appendChild(overlay);
+  }
+
   // Front/back depending on direction. "both" picks a side at random per card.
   function resolveDir() {
     return settings.direction === "both"
@@ -409,6 +446,7 @@
                 ? `<button class="speak-btn" id="speakBack" aria-label="Speak">🔊</button>`
                 : ""
             }
+            ${hasConj(card) ? `<button class="conj-btn" id="conjBtn">📖 Conjugation</button>` : ""}
             <div class="tap-hint" style="bottom:44px">Tap to flip back</div>
             <div class="deck-chip">${card.deckIcon} ${esc(card.deckName)}</div>
           </div>
@@ -450,10 +488,12 @@
     }
 
     flash.addEventListener("click", (e) => {
-      if (e.target.closest(".speak-btn")) return; // don't treat the speaker as a flip
+      if (e.target.closest(".speak-btn") || e.target.closest(".conj-btn")) return; // not a flip
       toggleFlip();
     });
     document.getElementById("reveal").addEventListener("click", reveal);
+    const cb = document.getElementById("conjBtn");
+    if (cb) cb.addEventListener("click", (e) => { e.stopPropagation(); openConj(card); });
 
     const sf = document.getElementById("speakFront");
     if (sf) sf.addEventListener("click", (e) => { e.stopPropagation(); speak(card.pt); });
