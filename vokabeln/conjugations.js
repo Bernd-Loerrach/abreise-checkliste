@@ -1,7 +1,8 @@
 // Present-tense (presente do indicativo) conjugations for the course verbs.
 // Forms: [eu, tu, ele/ela, nós, eles/elas]. Generated + hand-checked. European Portuguese.
 const CONJ = {
-  "(ir) buscar": ["busco", "buscas", "busca", "buscamos", "buscam"],
+  "buscar": ["busco", "buscas", "busca", "buscamos", "buscam"],
+  "ir buscar": ["vou buscar", "vais buscar", "vai buscar", "vamos buscar", "vão buscar"],
   "acabar": ["acabo", "acabas", "acaba", "acabamos", "acabam"],
   "achar": ["acho", "achas", "acha", "achamos", "acham"],
   "acordar": ["acordo", "acordas", "acorda", "acordamos", "acordam"],

@@ -74,7 +74,7 @@ const DECKS = [
     id: "letra_b",
     icon: "B",
     name: "Letter B",
-    namePt: "22 words",
+    namePt: "23 words",
     cards: [
       { pt: "(o) bacalhau", en: "codfish" },
       { pt: "(o) bairro", en: "neighbourhood" },
@@ -96,7 +96,8 @@ const DECKS = [
       { pt: "bom", en: "good" },
       { pt: "(o) Brasil", en: "Brazil" },
       { pt: "(o) brasileiro", en: "Brazilian" },
-      { pt: "(ir) buscar", en: "to fetch, to pick (someone) up" },
+      { pt: "buscar", en: "to fetch, to get, to search for" },
+      { pt: "ir buscar", en: "to go and fetch, to pick (someone) up" },
       { pt: "(a) Bélgica", en: "Belgium" },
     ],
   },
