@@ -1,8 +1,8 @@
 {
   "name": "Português A1 – Vokabeltrainer",
   "short_name": "Português",
-  "description": "Portugiesisch-Vokabeln (A1) mit Karteikarten, Quiz und Aussprache lernen.",
-  "lang": "de",
+  "description": "Learn European Portuguese vocabulary (A1) with flashcards, quizzes and pronunciation.",
+  "lang": "en",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
