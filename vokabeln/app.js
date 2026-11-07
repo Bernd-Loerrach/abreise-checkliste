@@ -409,6 +409,7 @@
                 ? `<button class="speak-btn" id="speakBack" aria-label="Speak">🔊</button>`
                 : ""
             }
+            <div class="tap-hint" style="bottom:44px">Tap to flip back</div>
             <div class="deck-chip">${card.deckIcon} ${esc(card.deckName)}</div>
           </div>
         </div>
@@ -423,13 +424,8 @@
     view.appendChild(stage);
     app.appendChild(view);
 
-    let flipped = false;
-    function flip() {
-      if (flipped) return;
-      flipped = true;
-      flash.classList.add("flipped");
-      // Speak Portuguese when the answer is revealed
-      speak(card.pt);
+    let revealed = false;
+    function showRatingButtons() {
       answers.classList.remove("single");
       answers.innerHTML = "";
       const again = el(`<button class="ans again">✗ Not yet</button>`);
@@ -439,12 +435,25 @@
       answers.appendChild(again);
       answers.appendChild(good);
     }
+    function reveal() {
+      if (!revealed) {
+        revealed = true;
+        showRatingButtons();
+      }
+      flash.classList.add("flipped");
+      speak(card.pt); // speak Portuguese when the answer shows
+    }
+    function toggleFlip() {
+      if (!revealed) return reveal();
+      flash.classList.toggle("flipped"); // flip freely back and forth
+      if (flash.classList.contains("flipped")) speak(card.pt);
+    }
 
     flash.addEventListener("click", (e) => {
       if (e.target.closest(".speak-btn")) return; // don't treat the speaker as a flip
-      flip();
+      toggleFlip();
     });
-    document.getElementById("reveal").addEventListener("click", flip);
+    document.getElementById("reveal").addEventListener("click", reveal);
 
     const sf = document.getElementById("speakFront");
     if (sf) sf.addEventListener("click", (e) => { e.stopPropagation(); speak(card.pt); });
