@@ -817,7 +817,7 @@ const DECKS = [
     name: "Letter U",
     namePt: "2 words",
     cards: [
-      { pt: "um, uma", en: "a" },
+      { pt: "um, uma", en: "a / an (also: one)" },
       { pt: "uns, umas", en: "some" },
     ],
   },
