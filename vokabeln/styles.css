@@ -532,40 +532,30 @@ button {
   line-height: 1.5;
 }
 
-/* ---------- Typed answer ---------- */
-.type-input {
-  width: 100%;
-  padding: 17px 18px;
-  border-radius: 16px;
-  border: 2px solid var(--border);
-  background: var(--surface);
-  color: var(--text);
-  font-size: 22px;
-  font-weight: 700;
-  text-align: center;
+/* ---------- Direction switch (top of home) ---------- */
+.dir-switch {
+  display: flex;
+  gap: 4px;
+  background: var(--surface-2);
+  border-radius: 14px;
+  padding: 5px;
+  margin-bottom: 16px;
   box-shadow: var(--shadow);
-  outline: none;
 }
-.type-input::placeholder { color: var(--text-dim); font-weight: 500; font-size: 16px; }
-.type-input:focus { border-color: var(--accent); }
-.type-input.ok { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, var(--surface)); }
-.type-input.no { border-color: var(--red); background: color-mix(in srgb, var(--red) 8%, var(--surface)); }
-.type-input:disabled { opacity: 1; }
-.feedback {
-  margin-top: 16px;
-  text-align: center;
+.dir-switch button {
+  flex: 1;
+  padding: 11px 6px;
+  border-radius: 10px;
   font-size: 15px;
   font-weight: 700;
+  color: var(--text-dim);
+  transition: background 0.15s, color 0.15s;
 }
-.feedback .ans-word { font-size: 28px; font-weight: 800; letter-spacing: -0.02em; margin-top: 4px; }
-.feedback .yours { color: var(--text-dim); font-weight: 500; margin-top: 6px; font-size: 13px; }
-.feedback.correct { color: var(--accent); }
-.feedback.accent { color: #b8860b; }
-.feedback.wrong { color: var(--red); }
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .feedback.accent { color: #e8b84b; }
+.dir-switch button.active {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
 }
-:root[data-theme="dark"] .feedback.accent { color: #e8b84b; }
 
 .fade-in { animation: fade 0.25s ease; }
 @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
