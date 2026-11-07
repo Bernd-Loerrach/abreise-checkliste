@@ -1,17 +1,17 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#0e9a5c"/>
-      <stop offset="1" stop-color="#076b3e"/>
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#eef2ef"/>
     </linearGradient>
   </defs>
   <rect width="512" height="512" fill="url(#bg)"/>
-  <!-- Inhalt innerhalb der sicheren Zone (Mitte ~60%) -->
-  <g transform="rotate(-6 256 256)">
-    <rect x="146" y="176" width="220" height="150" rx="26" fill="#ffffff"/>
-    <text x="256" y="278" font-family="-apple-system, Helvetica, Arial, sans-serif" font-size="90" font-weight="800" fill="#0e9a5c" text-anchor="middle" letter-spacing="-3">olá</text>
-  </g>
-  <circle cx="226" cy="356" r="11" fill="#f5c518"/>
-  <circle cx="256" cy="356" r="11" fill="#ffffff" opacity="0.9"/>
-  <circle cx="286" cy="356" r="11" fill="#f5c518"/>
+  <!-- Content kept within the central safe zone for maskable cropping -->
+  <text x="256" y="250" font-size="220" text-anchor="middle">🇵🇹</text>
+  <text x="256" y="338" font-family="-apple-system,'Segoe UI',Helvetica,Arial,sans-serif"
+        font-size="40" font-weight="800" fill="#0a7d4b" text-anchor="middle" letter-spacing="-1">Bernd&apos;s</text>
+  <text x="256" y="378" font-family="-apple-system,'Segoe UI',Helvetica,Arial,sans-serif"
+        font-size="31" font-weight="700" fill="#2d3b35" text-anchor="middle">Vocabulary</text>
+  <text x="256" y="412" font-family="-apple-system,'Segoe UI',Helvetica,Arial,sans-serif"
+        font-size="31" font-weight="700" fill="#c1272d" text-anchor="middle">App</text>
 </svg>
