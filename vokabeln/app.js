@@ -651,9 +651,22 @@
   }
 
   // ---------- Service worker ----------
+  // Register with updateViaCache:"none" so the browser always re-fetches the
+  // worker script from the network (iOS otherwise caches it and never updates),
+  // and reload once when a new version takes over so you never see a stale app.
   if ("serviceWorker" in navigator) {
+    const hadController = !!navigator.serviceWorker.controller;
+    let reloaded = false;
+    navigator.serviceWorker.addEventListener("controllerchange", () => {
+      if (!hadController || reloaded) return;
+      reloaded = true;
+      location.reload();
+    });
     window.addEventListener("load", () => {
-      navigator.serviceWorker.register("sw.js").catch(() => {});
+      navigator.serviceWorker
+        .register("sw.js", { updateViaCache: "none" })
+        .then((reg) => { reg.update(); })
+        .catch(() => {});
     });
   }
 

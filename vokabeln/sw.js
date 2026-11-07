@@ -1,6 +1,7 @@
-// Service Worker – macht den Vokabeltrainer offline nutzbar.
-// Bei Änderungen an den Dateien die Versionsnummer erhöhen.
-const CACHE = "pt-vocab-v9";
+// Service worker – keeps the app usable offline, but always prefers the
+// freshest version when online (network-first) so it never gets stuck on an
+// old cached build. Bump CACHE whenever files change.
+const CACHE = "pt-vocab-v10";
 const ASSETS = [
   "./",
   "./index.html",
@@ -23,8 +24,7 @@ self.addEventListener("install", (e) => {
 
 self.addEventListener("activate", (e) => {
   e.waitUntil(
-    caches
-      .keys()
+    caches.keys()
       .then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))))
       .then(() => self.clients.claim())
   );
@@ -33,27 +33,23 @@ self.addEventListener("activate", (e) => {
 self.addEventListener("fetch", (e) => {
   const req = e.request;
   if (req.method !== "GET") return;
+  const url = new URL(req.url);
+  if (url.origin !== location.origin) return; // let cross-origin requests pass through
 
-  // Navigationsanfragen: erst Netz, dann Cache (Fallback index.html)
-  if (req.mode === "navigate") {
-    e.respondWith(
-      fetch(req).catch(() => caches.match("./index.html"))
-    );
-    return;
-  }
-
-  // Sonst: Cache zuerst, sonst Netz (und ins Cache legen)
+  // Network-first: use the latest when online, fall back to cache offline.
   e.respondWith(
-    caches.match(req).then(
-      (hit) =>
-        hit ||
-        fetch(req).then((res) => {
-          if (res && res.status === 200 && res.type === "basic") {
-            const copy = res.clone();
-            caches.open(CACHE).then((c) => c.put(req, copy));
-          }
-          return res;
-        }).catch(() => hit)
-    )
+    fetch(req)
+      .then((res) => {
+        if (res && res.status === 200 && res.type === "basic") {
+          const copy = res.clone();
+          caches.open(CACHE).then((c) => c.put(req, copy));
+        }
+        return res;
+      })
+      .catch(() =>
+        caches.match(req).then((hit) =>
+          hit || (req.mode === "navigate" ? caches.match("./index.html") : undefined)
+        )
+      )
   );
 });
