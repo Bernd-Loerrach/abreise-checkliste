@@ -1,17 +1,16 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#e63329"/>
-      <stop offset="0.55" stop-color="#cc2520"/>
-      <stop offset="1" stop-color="#a81b17"/>
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#eef2ef"/>
     </linearGradient>
   </defs>
   <rect width="512" height="512" fill="url(#bg)"/>
-  <g fill="#ffde3a">
-    <text x="150" y="190" font-size="46" text-anchor="middle">★</text>
-    <text x="202" y="166" font-size="20" text-anchor="middle">★</text>
-    <text x="214" y="202" font-size="20" text-anchor="middle">★</text>
-  </g>
-  <text x="256" y="362" font-family="'PingFang SC','Hiragino Sans GB','Heiti SC','Noto Sans CJK SC',sans-serif"
-        font-size="240" font-weight="700" fill="#ffffff" text-anchor="middle">中</text>
+  <text x="256" y="250" font-size="220" text-anchor="middle">🇨🇳</text>
+  <text x="256" y="338" font-family="-apple-system,'Segoe UI',Helvetica,Arial,sans-serif"
+        font-size="40" font-weight="800" fill="#c0272d" text-anchor="middle" letter-spacing="-1">Daniel&apos;s</text>
+  <text x="256" y="378" font-family="-apple-system,'Segoe UI',Helvetica,Arial,sans-serif"
+        font-size="31" font-weight="700" fill="#2d3b35" text-anchor="middle">Vocabulary</text>
+  <text x="256" y="412" font-family="-apple-system,'Segoe UI',Helvetica,Arial,sans-serif"
+        font-size="31" font-weight="700" fill="#c99700" text-anchor="middle">App</text>
 </svg>

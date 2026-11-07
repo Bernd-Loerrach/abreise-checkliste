@@ -1,5 +1,5 @@
 // Service worker – offline support, network-first so updates never get stuck.
-const CACHE = "zh-vocab-v1";
+const CACHE = "zh-vocab-v2";
 const ASSETS = [
   "./",
   "./index.html",

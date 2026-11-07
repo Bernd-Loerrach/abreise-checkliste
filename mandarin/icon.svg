@@ -1,28 +1,26 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#e63329"/>
-      <stop offset="0.55" stop-color="#cc2520"/>
-      <stop offset="1" stop-color="#a81b17"/>
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#eef2ef"/>
     </linearGradient>
-    <radialGradient id="glow" cx="0.3" cy="0.22" r="0.9">
-      <stop offset="0" stop-color="#ffffff" stop-opacity="0.16"/>
-      <stop offset="0.55" stop-color="#ffffff" stop-opacity="0"/>
-    </radialGradient>
-    <filter id="soft" x="-30%" y="-30%" width="160%" height="160%">
-      <feDropShadow dx="0" dy="8" stdDeviation="14" flood-color="#3a0605" flood-opacity="0.4"/>
+    <filter id="flagShadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#0a3a24" flood-opacity="0.28"/>
     </filter>
   </defs>
+
   <rect width="512" height="512" rx="114" fill="url(#bg)"/>
-  <rect width="512" height="512" rx="114" fill="url(#glow)"/>
-  <!-- flag-style stars, top-left -->
-  <g fill="#ffde3a">
-    <text x="86" y="128" font-size="56" text-anchor="middle">★</text>
-    <text x="150" y="96" font-size="24" text-anchor="middle">★</text>
-    <text x="166" y="140" font-size="24" text-anchor="middle">★</text>
-    <text x="150" y="182" font-size="24" text-anchor="middle">★</text>
+
+  <!-- Chinese flag -->
+  <g filter="url(#flagShadow)">
+    <text x="256" y="268" font-size="300" text-anchor="middle">🇨🇳</text>
   </g>
-  <!-- 中 -->
-  <text x="256" y="372" font-family="'PingFang SC','Hiragino Sans GB','Heiti SC','Noto Sans CJK SC',sans-serif"
-        font-size="300" font-weight="700" fill="#ffffff" text-anchor="middle" filter="url(#soft)">中</text>
+
+  <!-- App name -->
+  <text x="256" y="372" font-family="-apple-system,'Segoe UI',Helvetica,Arial,sans-serif"
+        font-size="52" font-weight="800" fill="#c0272d" text-anchor="middle" letter-spacing="-1">Daniel&apos;s</text>
+  <text x="256" y="420" font-family="-apple-system,'Segoe UI',Helvetica,Arial,sans-serif"
+        font-size="40" font-weight="700" fill="#2d3b35" text-anchor="middle" letter-spacing="-0.5">Vocabulary</text>
+  <text x="256" y="462" font-family="-apple-system,'Segoe UI',Helvetica,Arial,sans-serif"
+        font-size="40" font-weight="700" fill="#c99700" text-anchor="middle" letter-spacing="-0.5">App</text>
 </svg>
