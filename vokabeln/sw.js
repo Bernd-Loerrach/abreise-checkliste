@@ -1,6 +1,6 @@
 // Service Worker – macht den Vokabeltrainer offline nutzbar.
 // Bei Änderungen an den Dateien die Versionsnummer erhöhen.
-const CACHE = "pt-vocab-v6";
+const CACHE = "pt-vocab-v7";
 const ASSETS = [
   "./",
   "./index.html",
