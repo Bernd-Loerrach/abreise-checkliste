@@ -74,10 +74,12 @@ const DECKS = [
     id: "letra_b",
     icon: "B",
     name: "Letter B",
-    namePt: "23 words",
+    namePt: "25 words",
     cards: [
       { pt: "(o) bacalhau", en: "codfish" },
       { pt: "(o) bairro", en: "neighbourhood" },
+      { pt: "(o) vizinho", en: "neighbour (male)" },
+      { pt: "(a) vizinha", en: "neighbour (female)" },
       { pt: "(a) banana", en: "banana" },
       { pt: "(a) banheira", en: "bathtub" },
       { pt: "(o) bar", en: "bar" },
