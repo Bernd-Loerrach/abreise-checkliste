@@ -157,6 +157,42 @@
   }
   const speechAvailable = "speechSynthesis" in window;
 
+  // Test button: speak a phrase and report exactly what the browser did, so a
+  // silent device can be diagnosed (didn't start / error / played but muted).
+  function diagnoseSpeech() {
+    const out = document.getElementById("voiceDiag");
+    const show = (msg) => { if (out) out.innerHTML = msg; };
+    if (!("speechSynthesis" in window)) return show("✗ This browser has no speech support.");
+    pickVoice();
+    const all = speechSynthesis.getVoices().length;
+    const head = `Voices on device: ${all} · Portuguese: ${ptVoices.length}<br>`;
+    let started = false, ended = false, errored = false;
+    try {
+      speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance("Olá! Bom dia.");
+      u.lang = "pt-PT";
+      u.rate = 0.9;
+      const v = chosenVoice();
+      if (v) { u.voice = v; u.lang = v.lang; }
+      u.onstart = () => { started = true; show(head + "▶ Speaking… (using " + (v ? v.name : "device default") + ")"); };
+      u.onend = () => {
+        ended = true;
+        if (!errored) show(head + "✓ The browser says it <b>played</b> the sentence.<br>If you heard nothing, the sound is being muted by the iPad: check <b>Silent mode</b> (bell in Control Center), the <b>volume</b>, and that no <b>Bluetooth</b> headphones/speaker are connected.");
+      };
+      u.onerror = (e) => {
+        errored = true;
+        show(head + "✗ Speech error: <b>" + esc(e.error || "unknown") + "</b>");
+      };
+      show(head + "…starting");
+      speechSynthesis.speak(u);
+      setTimeout(() => {
+        if (!started && !errored) show(head + "✗ Speech <b>never started</b> (speaking=" + speechSynthesis.speaking + ", pending=" + speechSynthesis.pending + "). Try opening the app in <b>Safari</b> instead of the home-screen icon.");
+      }, 2500);
+    } catch (err) {
+      show(head + "✗ Exception: " + esc(err && err.message));
+    }
+  }
+
   // ---------- Small DOM helpers ----------
   function el(html) {
     const t = document.createElement("template");
@@ -712,7 +748,8 @@
             </select>
           </div>
           <button class="test-btn" id="testVoice">▶ Test</button>
-        </div>` : ""}
+        </div>
+        <div class="voice-diag" id="voiceDiag"></div>` : ""}
         <div class="setting-row">
           <div>Appearance</div>
           <div class="seg" id="themeSeg">
@@ -759,7 +796,7 @@
         saveSettings(settings);
         speak("Olá! Bom dia.");
       });
-      document.getElementById("testVoice").addEventListener("click", () => speak("Olá! Bom dia."));
+      document.getElementById("testVoice").addEventListener("click", () => diagnoseSpeech());
     }
     const sw = document.getElementById("audioSw");
     if (speechAvailable) {

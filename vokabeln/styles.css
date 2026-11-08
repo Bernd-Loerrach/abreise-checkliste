@@ -546,6 +546,13 @@ button {
   font-size: 15px;
   font-family: inherit;
 }
+.voice-diag {
+  padding: 0 18px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--text-dim);
+}
+.voice-diag:not(:empty) { padding: 0 18px 14px; }
 .test-btn {
   flex-shrink: 0;
   padding: 9px 14px;
