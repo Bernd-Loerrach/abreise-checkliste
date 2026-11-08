@@ -162,6 +162,26 @@
     }
   }
 
+  // ---------- Infopedia links (Porto Editora dictionary, opens online) ----------
+  // Clean a card's Portuguese into a lookup word: drop "(o) " markers, trailing
+  // "(de)" notes, alternatives after a comma, and punctuation.
+  function lookupWord(pt) {
+    return String(pt)
+      .replace(/^\([^)]*\)\s*/, "")
+      .replace(/\s*\([^)]*\)\s*$/, "")
+      .split(",")[0]
+      .replace(/[?!.¿¡…]/g, "")
+      .trim()
+      .toLowerCase();
+  }
+  function infopediaDict(pt) {
+    return "https://www.infopedia.pt/dicionarios/portugues-ingles/" + encodeURIComponent(lookupWord(pt));
+  }
+  function infopediaVerb(pt) {
+    const v = lookupWord(pt).replace(/-se$/, "").split(" ")[0];
+    return "https://www.infopedia.pt/dicionarios/verbos-portugueses/" + encodeURIComponent(v);
+  }
+
   // ---------- Verb conjugations (present tense, on demand) ----------
   const PRONOUNS = ["eu", "tu", "ele / ela", "nós", "eles / elas"];
   function hasConj(card) {
@@ -191,6 +211,7 @@
             <button class="conj-close" aria-label="Close">✕</button>
           </div>
           ${rows}
+          <a class="info-link conj-more" href="${infopediaVerb(card.pt)}" target="_blank" rel="noopener">📘 All tenses on Infopedia ↗</a>
         </div>
       </div>`);
     const close = () => overlay.remove();
@@ -346,6 +367,7 @@
             <span class="pt">${esc(c.pt)}</span><br>
             <span class="de">${esc(c.en)}${c.note ? " · " + esc(c.note) : ""}</span>
           </span>
+          <a class="mini-info" href="${infopediaDict(c.pt)}" target="_blank" rel="noopener" aria-label="Look up on Infopedia">📘</a>
           ${speechAvailable ? `<button class="mini-speak" aria-label="Speak">🔊</button>` : ""}
         </div>`);
       const sp = item.querySelector(".mini-speak");
@@ -449,7 +471,10 @@
                 ? `<button class="speak-btn" id="speakBack" aria-label="Speak">🔊</button>`
                 : ""
             }
-            ${hasConj(card) ? `<button class="conj-btn" id="conjBtn">📖 Conjugation</button>` : ""}
+            <div class="card-actions">
+              ${hasConj(card) ? `<button class="conj-btn" id="conjBtn">📖 Conjugation</button>` : ""}
+              <a class="conj-btn info-link" href="${infopediaDict(card.pt)}" target="_blank" rel="noopener">📘 Infopedia</a>
+            </div>
             <div class="tap-hint" style="bottom:44px">Tap to flip back</div>
             <div class="deck-chip">${card.deckIcon} ${esc(card.deckName)}</div>
           </div>
@@ -491,7 +516,7 @@
     }
 
     flash.addEventListener("click", (e) => {
-      if (e.target.closest(".speak-btn") || e.target.closest(".conj-btn")) return; // not a flip
+      if (e.target.closest(".speak-btn") || e.target.closest(".conj-btn") || e.target.closest("a")) return; // not a flip
       toggleFlip();
     });
     document.getElementById("reveal").addEventListener("click", reveal);
