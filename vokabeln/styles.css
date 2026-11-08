@@ -573,6 +573,24 @@ button {
 }
 .conj-title { font-size: 24px; font-weight: 800; letter-spacing: -0.02em; }
 .conj-sub { font-size: 13px; color: var(--text-dim); margin-top: 2px; }
+.conj-tag {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  border: 1.5px solid currentColor;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  vertical-align: middle;
+}
+.conj-tag.regular { color: var(--accent); }
+.conj-tag.irregular { color: #c98a00; }
+.conj-tag.impersonal { color: var(--text-dim); }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .conj-tag.irregular { color: #e8b84b; }
+}
+:root[data-theme="dark"] .conj-tag.irregular { color: #e8b84b; }
 .conj-close {
   width: 34px; height: 34px;
   border-radius: 50%;

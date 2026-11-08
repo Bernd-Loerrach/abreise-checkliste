@@ -168,7 +168,10 @@
     return typeof CONJ !== "undefined" && CONJ[card.pt];
   }
   function openConj(card) {
-    const forms = CONJ[card.pt];
+    const entry = CONJ[card.pt];
+    const forms = entry.f;
+    const tLabels = { regular: "Regular", irregular: "Irregular", impersonal: "Impersonal" };
+    const tagHtml = `<span class="conj-tag ${entry.t}">${tLabels[entry.t] || ""}</span>`;
     const rows = forms
       .map((f, i) =>
         f
@@ -183,7 +186,7 @@
           <div class="conj-head">
             <div>
               <div class="conj-title">${esc(card.pt)}</div>
-              <div class="conj-sub">${esc(card.en)} · present tense</div>
+              <div class="conj-sub">${esc(card.en)} · present tense ${tagHtml}</div>
             </div>
             <button class="conj-close" aria-label="Close">✕</button>
           </div>
