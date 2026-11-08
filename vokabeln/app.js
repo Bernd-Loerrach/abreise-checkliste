@@ -106,29 +106,52 @@
   }
 
   // ---------- Text-to-speech (European Portuguese) ----------
-  let ptVoice = null;
+  // Some devices (notably iPads) list Portuguese voices that aren't actually
+  // downloaded; forcing one of those gives silence. So: use the voice chosen in
+  // Settings (or the first pt-PT voice), and if it doesn't start speaking within
+  // ~1.2 s, retry with the system's own Portuguese voice and remember that.
+  let ptVoices = [];
+  let forcedVoiceFails = false;
+  let speakSeq = 0;
   function pickVoice() {
     if (!("speechSynthesis" in window)) return;
-    const voices = speechSynthesis.getVoices();
-    ptVoice =
-      voices.find((v) => v.lang === "pt-PT") ||
-      voices.find((v) => v.lang && v.lang.toLowerCase().startsWith("pt")) ||
-      null;
+    const all = speechSynthesis.getVoices().filter((v) => v.lang && v.lang.toLowerCase().replace("_", "-").startsWith("pt"));
+    // European Portuguese first
+    ptVoices = all.sort((a, b) => (b.lang.replace("_", "-") === "pt-PT") - (a.lang.replace("_", "-") === "pt-PT"));
   }
   if ("speechSynthesis" in window) {
     pickVoice();
     speechSynthesis.onvoiceschanged = pickVoice;
   }
-  function speak(text) {
+  function chosenVoice() {
+    if (settings.voiceURI === "system") return null;
+    if (settings.voiceURI) return ptVoices.find((v) => v.voiceURI === settings.voiceURI) || null;
+    if (forcedVoiceFails) return null;
+    return ptVoices[0] || null;
+  }
+  function speak(text, isRetry) {
     if (!settings.audio || !("speechSynthesis" in window)) return;
     // Drop a leading gender/article marker like "(o) " so it isn't read aloud.
     const clean = String(text).replace(/^\([^)]*\)\s*/, "");
+    const seq = ++speakSeq;
     try {
       speechSynthesis.cancel();
       const u = new SpeechSynthesisUtterance(clean);
       u.lang = "pt-PT";
-      if (ptVoice) u.voice = ptVoice;
       u.rate = 0.9;
+      const v = isRetry ? null : chosenVoice();
+      if (v) {
+        u.voice = v;
+        u.lang = v.lang;
+        let started = false;
+        u.onstart = () => { started = true; };
+        setTimeout(() => {
+          if (!started && seq === speakSeq) {
+            if (!settings.voiceURI) forcedVoiceFails = true;
+            speak(text, true);
+          }
+        }, 1200);
+      }
       speechSynthesis.speak(u);
     } catch {}
   }
@@ -678,6 +701,18 @@
             ${speechAvailable ? "<div class='desc'>Read Portuguese aloud automatically</div>" : ""}</div>
           <div class="switch ${settings.audio ? "on" : ""}" id="audioSw" ${speechAvailable ? "" : 'style="opacity:.4"'}></div>
         </div>
+        ${speechAvailable ? `<div class="setting-row voice-row">
+          <div style="flex:1">Voice<div class="desc">No sound? Pick another voice and tap Test.</div>
+            <select class="voice-sel" id="voiceSel">
+              <option value="" ${!settings.voiceURI ? "selected" : ""}>Automatic</option>
+              <option value="system" ${settings.voiceURI === "system" ? "selected" : ""}>Device default (Portuguese)</option>
+              ${(pickVoice(), ptVoices)
+                .map((v) => `<option value="${esc(v.voiceURI)}" ${settings.voiceURI === v.voiceURI ? "selected" : ""}>${esc(v.name)} (${esc(v.lang)})</option>`)
+                .join("")}
+            </select>
+          </div>
+          <button class="test-btn" id="testVoice">▶ Test</button>
+        </div>` : ""}
         <div class="setting-row">
           <div>Appearance</div>
           <div class="seg" id="themeSeg">
@@ -716,6 +751,16 @@
         renderSettings();
       })
     );
+    const voiceSel = document.getElementById("voiceSel");
+    if (voiceSel) {
+      voiceSel.addEventListener("change", () => {
+        settings.voiceURI = voiceSel.value;
+        forcedVoiceFails = false;
+        saveSettings(settings);
+        speak("Olá! Bom dia.");
+      });
+      document.getElementById("testVoice").addEventListener("click", () => speak("Olá! Bom dia."));
+    }
     const sw = document.getElementById("audioSw");
     if (speechAvailable) {
       sw.addEventListener("click", () => {
@@ -753,19 +798,19 @@
     });
   }
 
-  // iOS Safari: unlock audio only after the first user gesture
-  document.addEventListener(
-    "touchstart",
-    function unlock() {
-      if (speechAvailable && settings.audio) {
-        try {
-          const u = new SpeechSynthesisUtterance("");
-          speechSynthesis.speak(u);
-        } catch {}
-      }
-      document.removeEventListener("touchstart", unlock);
-    },
-    { once: true, passive: true }
+  // iOS/iPadOS Safari: speech must be unlocked by a user gesture. Listen for
+  // touch AND pointer/click, so iPads used with a keyboard/trackpad work too.
+  let unlocked = false;
+  function unlock() {
+    if (unlocked) return;
+    unlocked = true;
+    if (speechAvailable && settings.audio) {
+      try { speechSynthesis.speak(new SpeechSynthesisUtterance(" ")); } catch {}
+    }
+    ["touchstart", "pointerdown", "click"].forEach((ev) => document.removeEventListener(ev, unlock, true));
+  }
+  ["touchstart", "pointerdown", "click"].forEach((ev) =>
+    document.addEventListener(ev, unlock, { capture: true, passive: true })
   );
 
   renderHome();
