@@ -119,7 +119,7 @@ const DECKS = [
     namePt: "Verbos irregulares",
     cards: [
       { pt: "dormir", en: "to sleep" },
-      { pt: "doer", en: "to hurt, to ache" },
+      { pt: "doer", en: "to hurt, to ache", note: "usually: dói-me (one thing) / doem-me (several)" },
       { pt: "referir", en: "to refer to" },
       { pt: "ser", en: "to be" },
       { pt: "estar", en: "to be" },
@@ -269,7 +269,7 @@ const DECKS = [
       { pt: "sentir-se mal", en: "to feel unwell" },
       { pt: "(a) dor", en: "pain, ache" },
       { pt: "(as) dores de cabeça", en: "headaches" },
-      { pt: "doer", en: "to hurt, to ache" },
+      { pt: "doer", en: "to hurt, to ache", note: "usually: dói-me (one thing) / doem-me (several)" },
       { pt: "Dói-me o estômago", en: "my stomach hurts" },
       { pt: "(o) estômago", en: "stomach" },
       { pt: "(a) febre", en: "fever" },
