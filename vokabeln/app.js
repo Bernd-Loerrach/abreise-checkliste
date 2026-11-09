@@ -296,6 +296,75 @@
   // =================================================================
   //  HOME
   // =================================================================
+  // ---------- Help texts ----------
+  const STAT_HELP = {
+    due: "<b>Due</b> – words scheduled for review today. <b>Learn</b> works through them first.",
+    learned: "<b>Learned</b> – words you got right on <b>two different days</b>. Your first “Got it” starts the clock: the word comes back tomorrow, and if you know it again, it counts as learned.",
+    new: "<b>New</b> – words you haven't practised yet. Each <b>Learn</b> session adds up to " + LEARN_BATCH + " of them.",
+  };
+
+  function renderHelp(firstTime) {
+    clear();
+    const ladder = INTERVALS.slice(1)
+      .map((d) => `<span>${d === 1 ? "tomorrow" : d + " days"}</span>`)
+      .join("<i>→</i>");
+    const view = el(`<div class="fade-in help">
+        <div class="topbar">
+          ${firstTime ? "" : `<button class="back-btn" id="back">‹ Back</button>`}
+          <h1 style="font-size:20px;${firstTime ? "" : "margin-left:4px"}">How it works</h1>
+        </div>
+        ${firstTime ? `<p class="help-intro">Welcome! 👋 Here's a one-minute guide. You can open it again anytime with the <b>ⓘ</b> button on the home screen.</p>` : ""}
+
+        <div class="help-card">
+          <h3>🎯 Learn</h3>
+          <p>Each session mixes the words <b>due</b> for review with up to ${LEARN_BATCH} <b>new</b> ones.</p>
+          <p>Look at the card, try to recall the answer, then <b>tap to flip</b> (tap again to flip back). Rate yourself honestly:
+            <b>✓ Got it</b> or <b>✗ Not yet</b>. Missed words come back again at the end of the session.</p>
+        </div>
+
+        <div class="help-card">
+          <h3>📈 Why words come back later</h3>
+          <p>The app uses <b>spaced repetition</b>. Every “Got it” sends a word further into the future:</p>
+          <div class="help-ladder">${ladder}</div>
+          <p>“Not yet” starts it again from tomorrow. You review each word just before you'd forget it, so <b>a few minutes every day</b> works better than one long session.</p>
+        </div>
+
+        <div class="help-card">
+          <h3>🔢 The three numbers</h3>
+          <p><b>Due</b> – to review today. <b>New</b> – not practised yet.</p>
+          <p><b>Learned</b> – got right on <b>two different days</b>. So after your first session Learned is still 0 – that's normal. It starts growing from day two.</p>
+          <p class="dim">Tip: tap a number on the home screen for a quick reminder.</p>
+        </div>
+
+        <div class="help-card">
+          <h3>🧭 More features</h3>
+          <ul>
+            <li><b>Direction</b> (top of the home screen): Portuguese → English, English → Portuguese, or Both mixed.</li>
+            <li><b>Topics</b>: practise one topic or letter at a time, or browse all its words.</li>
+            <li><b>🧩 Quiz</b>: quick multiple choice; your answers count too.</li>
+            <li><b>📖 Conjugation</b> on verb cards: present tense, marked regular or irregular.</li>
+            <li><b>📘 Infopedia</b>: opens the word in the Infopedia dictionary (needs internet).</li>
+            <li><b>🔊 Sound</b>: Portuguese pronunciation. No sound? ⚙️ Settings → Voice → Test.</li>
+          </ul>
+        </div>
+
+        <div class="help-card">
+          <h3>📱 Your progress</h3>
+          <p>Progress is saved <b>on this device only</b> – iPhone, iPad and Mac each keep their own. On iPhone/iPad the home-screen icon and Safari are separate too, so always open it the same way.</p>
+          <p>Install it with Safari → Share → <b>Add to Home Screen</b>. After that it also works <b>offline</b>.</p>
+        </div>
+
+        <button class="cta" id="helpDone" style="justify-content:center">
+          <span class="cta-text" style="text-align:center;flex:none">${firstTime ? "Let's start 🚀" : "Back to home"}</span>
+        </button>
+      </div>`);
+    app.appendChild(view);
+    window.scrollTo(0, 0);
+    const back = document.getElementById("back");
+    if (back) back.addEventListener("click", renderHome);
+    document.getElementById("helpDone").addEventListener("click", renderHome);
+  }
+
   function renderHome() {
     clear();
     const s = stats();
@@ -307,7 +376,10 @@
           <h1>Português 🇵🇹</h1>
           <div class="subtitle">Português a Valer 1 · ${ALL_CARDS.length} words</div>
         </div>
-        <button class="icon-btn" id="settingsBtn" aria-label="Settings">⚙️</button>
+        <div class="topbar-actions">
+          <button class="icon-btn" id="helpBtn" aria-label="How it works">ⓘ</button>
+          <button class="icon-btn" id="settingsBtn" aria-label="Settings">⚙️</button>
+        </div>
       </div>`)
     );
 
@@ -321,11 +393,13 @@
 
     view.appendChild(
       el(`<div class="stats-row">
-        <div class="stat"><div class="num due">${s.due}</div><div class="lbl">Due</div></div>
-        <div class="stat"><div class="num">${s.learned}</div><div class="lbl">Learned</div></div>
-        <div class="stat"><div class="num">${s.news}</div><div class="lbl">New</div></div>
+        <button class="stat" data-k="due"><div class="num due">${s.due}</div><div class="lbl">Due</div></button>
+        <button class="stat" data-k="learned"><div class="num">${s.learned}</div><div class="lbl">Learned</div></button>
+        <button class="stat" data-k="new"><div class="num">${s.news}</div><div class="lbl">New</div></button>
       </div>`)
     );
+    const statHint = el(`<div class="stat-hint" id="statHint" hidden></div>`);
+    view.appendChild(statHint);
 
     // Learn (due + new cards)
     const learnCount = s.due + Math.min(s.news, LEARN_BATCH);
@@ -372,6 +446,19 @@
 
     app.appendChild(view);
     document.getElementById("settingsBtn").addEventListener("click", renderSettings);
+    document.getElementById("helpBtn").addEventListener("click", () => renderHelp(false));
+    view.querySelectorAll(".stat").forEach((b) =>
+      b.addEventListener("click", () => {
+        const k = b.dataset.k;
+        const open = statHint.dataset.k === k && !statHint.hidden;
+        view.querySelectorAll(".stat").forEach((x) => x.classList.remove("active"));
+        if (open) { statHint.hidden = true; statHint.dataset.k = ""; return; }
+        statHint.innerHTML = STAT_HELP[k];
+        statHint.dataset.k = k;
+        statHint.hidden = false;
+        b.classList.add("active");
+      })
+    );
     view.querySelectorAll("#dirSwitch button").forEach((b) =>
       b.addEventListener("click", () => {
         settings.direction = b.dataset.v;
@@ -602,6 +689,7 @@
           <div class="emoji">${emoji}</div>
           <h2>Well done!</h2>
           <p>${correct} of ${total} correct (${pct}%)</p>
+          <p class="done-note">Words you knew come back for review in a day or two. Get them right again and they count as <b>Learned</b>.</p>
           <button class="cta" id="home" style="justify-content:center">
             <span class="cta-text" style="text-align:center;flex:none">Back to home</span>
           </button>
@@ -850,5 +938,12 @@
     document.addEventListener(ev, unlock, { capture: true, passive: true })
   );
 
-  renderHome();
+  // First launch: show the "How it works" guide once.
+  if (!settings.seenHelp) {
+    settings.seenHelp = true;
+    saveSettings(settings);
+    renderHelp(true);
+  } else {
+    renderHome();
+  }
 })();

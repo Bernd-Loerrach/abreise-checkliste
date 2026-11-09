@@ -532,6 +532,44 @@ button {
   line-height: 1.5;
 }
 
+/* ---------- Help: stat hints, How it works ---------- */
+.topbar-actions { margin-left: auto; display: flex; gap: 8px; }
+.topbar-actions .icon-btn { margin-left: 0; font-weight: 700; color: var(--text); }
+button.stat { font: inherit; color: inherit; cursor: pointer; border: 2px solid transparent; }
+button.stat.active { border-color: var(--accent); }
+.stat-hint {
+  background: var(--surface);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+  padding: 12px 14px;
+  margin: -6px 0 16px;
+  font-size: 14px;
+  line-height: 1.45;
+}
+.help-intro { font-size: 15px; line-height: 1.5; margin: 0 2px 14px; }
+.help-card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 16px 18px;
+  margin-bottom: 12px;
+}
+.help-card h3 { margin: 0 0 8px; font-size: 16px; }
+.help-card p, .help-card li { font-size: 14.5px; line-height: 1.5; margin: 0 0 6px; }
+.help-card ul { margin: 0; padding-left: 18px; }
+.help-card .dim { color: var(--text-dim); }
+.help-ladder { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; margin: 8px 0 10px; }
+.help-ladder span {
+  background: var(--surface-2);
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 13px;
+  font-weight: 700;
+}
+.help-ladder i { font-style: normal; color: var(--text-dim); }
+.help .cta { margin-top: 6px; }
+.done-note { font-size: 13.5px; line-height: 1.45; color: var(--text-dim); }
+
 /* ---------- Voice picker ---------- */
 .voice-row { align-items: flex-end; gap: 12px; }
 .voice-sel {
