@@ -247,12 +247,18 @@
     return typeof CONJ !== "undefined" && CONJ[card.pt];
   }
   // Which tense the conjugation panel shows; remembered while the app is open.
-  let conjTense = "f"; // "f" = presente, "p" = pretérito perfeito
+  let conjTense = "f"; // "f" = presente, "p" = pretérito perfeito, "i" = imperativo
+  const IMP_PRONOUNS = ["tu", "tu (negative)", "você", "vocês"];
+  const TENSES = {
+    f: { btn: "Presente", name: "present tense", forms: "f", kind: "t", pron: PRONOUNS },
+    p: { btn: "Pretérito", name: "past tense (pretérito perfeito)", forms: "p", kind: "tp", pron: PRONOUNS },
+    i: { btn: "Imperativo", name: "imperative · tu = informal, você(s) = formal", forms: "i", kind: "ti", pron: IMP_PRONOUNS },
+  };
   function openConj(card) {
     const entry = CONJ[card.pt];
     const tLabels = { regular: "Regular", irregular: "Irregular", impersonal: "Impersonal" };
-    const hasPast = Array.isArray(entry.p);
-    if (!hasPast) conjTense = "f";
+    const avail = Object.keys(TENSES).filter((k) => Array.isArray(entry[TENSES[k].forms]));
+    if (!avail.includes(conjTense)) conjTense = "f";
     const overlay = el(`<div class="conj-overlay">
         <div class="conj-sheet">
           <div class="conj-head">
@@ -262,24 +268,23 @@
             </div>
             <button class="conj-close" aria-label="Close">✕</button>
           </div>
-          ${hasPast ? `<div class="seg conj-tenses" id="conjTenses">
-            <button data-v="f">Presente</button>
-            <button data-v="p">Pretérito perfeito</button>
+          ${avail.length > 1 ? `<div class="seg conj-tenses" id="conjTenses">
+            ${avail.map((k) => `<button data-v="${k}">${TENSES[k].btn}</button>`).join("")}
           </div>` : ""}
           <div id="conjRows"></div>
           <a class="info-link conj-more" href="${infopediaVerb(card.pt)}" target="_blank" rel="noopener">📘 All tenses on Infopedia ↗</a>
         </div>
       </div>`);
     function paint() {
-      const forms = conjTense === "p" ? entry.p : entry.f;
-      const kind = conjTense === "p" ? entry.tp : entry.t;
-      const tenseName = conjTense === "p" ? "past tense (pretérito perfeito)" : "present tense";
+      const T = TENSES[conjTense];
+      const forms = entry[T.forms];
+      const kind = entry[T.kind];
       overlay.querySelector("#conjSub").innerHTML =
-        `${esc(card.en)} · ${tenseName} <span class="conj-tag ${kind}">${tLabels[kind] || ""}</span>`;
+        `${esc(card.en)} · ${T.name} <span class="conj-tag ${kind}">${tLabels[kind] || ""}</span>`;
       overlay.querySelector("#conjRows").innerHTML = forms
         .map((f, i) =>
           f
-            ? `<div class="conj-row"><span class="conj-pron">${PRONOUNS[i]}</span><span class="conj-form">${esc(f)}</span>${
+            ? `<div class="conj-row"><span class="conj-pron">${T.pron[i]}</span><span class="conj-form">${esc(f)}${conjTense === "i" ? "!" : ""}</span>${
                 speechAvailable ? `<button class="conj-say" data-f="${esc(f)}" aria-label="Speak">🔊</button>` : ""
               }</div>`
             : ""
