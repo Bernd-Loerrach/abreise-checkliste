@@ -242,7 +242,7 @@
   }
 
   // ---------- Verb conjugations (present tense, on demand) ----------
-  const PRONOUNS = ["eu", "tu", "ele / ela", "nós", "eles / elas"];
+  const PRONOUNS = ["eu", "tu", "ele / ela / você", "nós", "eles / elas / vocês"];
   function hasConj(card) {
     return typeof CONJ !== "undefined" && CONJ[card.pt];
   }

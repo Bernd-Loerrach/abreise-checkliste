@@ -709,10 +709,11 @@ a.conj-more {
   border-top: 1px solid var(--border);
 }
 .conj-row .conj-pron {
-  width: 88px;
+  width: 104px;
   flex-shrink: 0;
   color: var(--text-dim);
-  font-size: 14px;
+  font-size: 13px;
+  line-height: 1.25;
   font-weight: 600;
 }
 .conj-row .conj-form { font-size: 18px; font-weight: 700; flex: 1; }

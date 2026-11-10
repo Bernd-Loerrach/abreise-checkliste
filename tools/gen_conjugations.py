@@ -42,6 +42,8 @@ OVR = {
     "repetir": ["repito", "repetes", "repete", "repetimos", "repetem"],
     "referir": ["refiro", "referes", "refere", "referimos", "referem"],
     "dormir": ["durmo", "dormes", "dorme", "dormimos", "dormem"],
+    "dar": ["dou", "dás", "dá", "damos", "dão"],
+    "pôr": ["ponho", "pões", "põe", "pomos", "põem"],
     "doer": ["doo", "dóis", "dói", "doemos", "doem"],
     "sair": ["saio", "sais", "sai", "saímos", "saem"],
     "rir": ["rio", "ris", "ri", "rimos", "riem"],
@@ -95,7 +97,7 @@ def main():
         if not en.startswith("to "):
             continue
         core, refl = core_of(pt)
-        if " " in core or not re.search(r"(ar|er|ir|or)$", core):
+        if " " in core or not re.search(r"(ar|er|ir|or|ôr)$", core):
             continue
         forms = OVR[core][:] if core in OVR else regular(core)
         if refl:

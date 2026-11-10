@@ -1,7 +1,7 @@
 // Service worker – keeps the app usable offline, but always prefers the
 // freshest version when online (network-first) so it never gets stuck on an
 // old cached build. Bump CACHE whenever files change.
-const CACHE = "pt-vocab-v30";
+const CACHE = "pt-vocab-v31";
 const ASSETS = [
   "./",
   "./index.html",
