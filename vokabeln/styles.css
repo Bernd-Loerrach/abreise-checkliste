@@ -753,3 +753,7 @@ a.conj-more {
 
 .fade-in { animation: fade 0.25s ease; }
 @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+/* ---------- Conjugation tense switch ---------- */
+.conj-tenses { display: flex; margin: 0 0 6px; }
+.conj-tenses button { flex: 1; }

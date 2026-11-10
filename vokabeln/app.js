@@ -246,39 +246,59 @@
   function hasConj(card) {
     return typeof CONJ !== "undefined" && CONJ[card.pt];
   }
+  // Which tense the conjugation panel shows; remembered while the app is open.
+  let conjTense = "f"; // "f" = presente, "p" = pretérito perfeito
   function openConj(card) {
     const entry = CONJ[card.pt];
-    const forms = entry.f;
     const tLabels = { regular: "Regular", irregular: "Irregular", impersonal: "Impersonal" };
-    const tagHtml = `<span class="conj-tag ${entry.t}">${tLabels[entry.t] || ""}</span>`;
-    const rows = forms
-      .map((f, i) =>
-        f
-          ? `<div class="conj-row"><span class="conj-pron">${PRONOUNS[i]}</span><span class="conj-form">${esc(f)}</span>${
-              speechAvailable ? `<button class="conj-say" data-f="${esc(f)}" aria-label="Speak">🔊</button>` : ""
-            }</div>`
-          : ""
-      )
-      .join("");
+    const hasPast = Array.isArray(entry.p);
+    if (!hasPast) conjTense = "f";
     const overlay = el(`<div class="conj-overlay">
         <div class="conj-sheet">
           <div class="conj-head">
             <div>
               <div class="conj-title">${esc(card.pt)}</div>
-              <div class="conj-sub">${esc(card.en)} · present tense ${tagHtml}</div>
+              <div class="conj-sub" id="conjSub"></div>
             </div>
             <button class="conj-close" aria-label="Close">✕</button>
           </div>
-          ${rows}
+          ${hasPast ? `<div class="seg conj-tenses" id="conjTenses">
+            <button data-v="f">Presente</button>
+            <button data-v="p">Pretérito perfeito</button>
+          </div>` : ""}
+          <div id="conjRows"></div>
           <a class="info-link conj-more" href="${infopediaVerb(card.pt)}" target="_blank" rel="noopener">📘 All tenses on Infopedia ↗</a>
         </div>
       </div>`);
+    function paint() {
+      const forms = conjTense === "p" ? entry.p : entry.f;
+      const kind = conjTense === "p" ? entry.tp : entry.t;
+      const tenseName = conjTense === "p" ? "past tense (pretérito perfeito)" : "present tense";
+      overlay.querySelector("#conjSub").innerHTML =
+        `${esc(card.en)} · ${tenseName} <span class="conj-tag ${kind}">${tLabels[kind] || ""}</span>`;
+      overlay.querySelector("#conjRows").innerHTML = forms
+        .map((f, i) =>
+          f
+            ? `<div class="conj-row"><span class="conj-pron">${PRONOUNS[i]}</span><span class="conj-form">${esc(f)}</span>${
+                speechAvailable ? `<button class="conj-say" data-f="${esc(f)}" aria-label="Speak">🔊</button>` : ""
+              }</div>`
+            : ""
+        )
+        .join("");
+      overlay.querySelectorAll(".conj-say").forEach((b) =>
+        b.addEventListener("click", (e) => { e.stopPropagation(); speak(b.dataset.f); })
+      );
+      overlay.querySelectorAll("#conjTenses button").forEach((b) =>
+        b.classList.toggle("active", b.dataset.v === conjTense)
+      );
+    }
+    overlay.querySelectorAll("#conjTenses button").forEach((b) =>
+      b.addEventListener("click", (e) => { e.stopPropagation(); conjTense = b.dataset.v; paint(); })
+    );
+    paint();
     const close = () => overlay.remove();
     overlay.addEventListener("click", (e) => { if (e.target === overlay) close(); });
     overlay.querySelector(".conj-close").addEventListener("click", close);
-    overlay.querySelectorAll(".conj-say").forEach((b) =>
-      b.addEventListener("click", (e) => { e.stopPropagation(); speak(b.dataset.f); })
-    );
     document.body.appendChild(overlay);
   }
 
@@ -342,7 +362,7 @@
             <li><b>Direction</b> (top of the home screen): Portuguese → English, English → Portuguese, or Both mixed.</li>
             <li><b>Topics</b>: practise one topic or letter at a time, or browse all its words.</li>
             <li><b>🧩 Quiz</b>: quick multiple choice; your answers count too.</li>
-            <li><b>📖 Conjugation</b> on verb cards: present tense, marked regular or irregular.</li>
+            <li><b>📖 Conjugation</b> on verb cards: present and past tense (pretérito perfeito), marked regular or irregular.</li>
             <li><b>📘 Infopedia</b>: opens the word in the Infopedia dictionary (needs internet).</li>
             <li><b>🔊 Sound</b>: Portuguese pronunciation. No sound? ⚙️ Settings → Voice → Test.</li>
           </ul>

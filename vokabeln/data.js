@@ -118,6 +118,9 @@ const DECKS = [
     name: "Irregular verbs",
     namePt: "Verbos irregulares",
     cards: [
+      { pt: "ler", en: "to read" },
+      { pt: "perder", en: "to lose, to miss" },
+      { pt: "haver", en: "there is / there are", note: "used as: há" },
       { pt: "dar", en: "to give" },
       { pt: "pôr", en: "to put" },
       { pt: "dormir", en: "to sleep" },
@@ -466,8 +469,9 @@ const DECKS = [
     id: "letra_c",
     icon: "C",
     name: "Letter C",
-    namePt: "85 words",
+    namePt: "86 words",
     cards: [
+      { pt: "comer", en: "to eat" },
       { pt: "(o) campismo", en: "camping" },
       { pt: "fazer campismo", en: "to go camping" },
       { pt: "(o/a) colega", en: "colleague, classmate" },
@@ -771,8 +775,9 @@ const DECKS = [
     id: "letra_l",
     icon: "L",
     name: "Letter L",
-    namePt: "18 words",
+    namePt: "19 words",
     cards: [
+      { pt: "ler", en: "to read" },
       { pt: "(o) lanche", en: "snack (afternoon snack)" },
       { pt: "(o) livro", en: "book" },
       { pt: "(o) lado", en: "side" },
@@ -882,8 +887,9 @@ const DECKS = [
     id: "letra_p",
     icon: "P",
     name: "Letter P",
-    namePt: "66 words",
+    namePt: "67 words",
     cards: [
+      { pt: "perder", en: "to lose, to miss" },
       { pt: "pôr", en: "to put" },
       { pt: "(o) projeto", en: "project" },
       { pt: "o pior", en: "the worst" },
