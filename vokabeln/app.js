@@ -157,6 +157,38 @@
   }
   const speechAvailable = "speechSynthesis" in window;
 
+  // Mute / unmute: one tap silences everything (auto-play and the 🔊 buttons).
+  function muteBtn() {
+    if (!speechAvailable) return "";
+    const on = settings.audio;
+    return `<button class="icon-btn mute-btn" aria-label="${on ? "Mute sound" : "Turn sound on"}">${on ? "🔊" : "🔇"}</button>`;
+  }
+  function syncMute() {
+    document.body.classList.toggle("muted", !settings.audio);
+    document.querySelectorAll(".mute-btn").forEach((b) => {
+      b.textContent = settings.audio ? "🔊" : "🔇";
+      b.setAttribute("aria-label", settings.audio ? "Mute sound" : "Turn sound on");
+    });
+  }
+  function setAudio(on) {
+    settings.audio = on;
+    saveSettings(settings);
+    if (!on) {
+      try { speechSynthesis.cancel(); } catch {}
+    } else {
+      // This tap is a user gesture, so it also unlocks speech on iPhone/iPad.
+      try { speechSynthesis.speak(new SpeechSynthesisUtterance(" ")); } catch {}
+    }
+    syncMute();
+  }
+  document.addEventListener("click", (e) => {
+    const b = e.target.closest(".mute-btn");
+    if (!b) return;
+    e.stopPropagation();
+    setAudio(!settings.audio);
+  });
+  syncMute();
+
   // Test button: speak a phrase and report exactly what the browser did, so a
   // silent device can be diagnosed (didn't start / error / played but muted).
   function diagnoseSpeech() {
@@ -402,6 +434,7 @@
           <div class="subtitle">Português a Valer 1 · ${ALL_CARDS.length} words</div>
         </div>
         <div class="topbar-actions">
+          ${muteBtn()}
           <button class="icon-btn" id="helpBtn" aria-label="How it works">ⓘ</button>
           <button class="icon-btn" id="settingsBtn" aria-label="Settings">⚙️</button>
         </div>
@@ -608,6 +641,7 @@
     view.appendChild(
       el(`<div class="topbar">
         <button class="back-btn" id="exit">‹ Exit</button>
+        ${muteBtn()}
       </div>`)
     );
 
@@ -764,7 +798,7 @@
     const options = shuffle([card, ...distractors]);
 
     const view = el(`<div class="fade-in"></div>`);
-    view.appendChild(el(`<div class="topbar"><button class="back-btn" id="exit">‹ Exit</button></div>`));
+    view.appendChild(el(`<div class="topbar"><button class="back-btn" id="exit">‹ Exit</button>${muteBtn()}</div>`));
     const pct = Math.round(((opts.index - 1) / opts.total) * 100);
     view.appendChild(
       el(`<div class="session-progress"><span style="width:${pct}%"></span></div>
@@ -847,7 +881,7 @@
     const miscGroup = el(`<div class="setting-group">
         <div class="setting-row">
           <div>Pronunciation ${speechAvailable ? "" : "<div class='desc'>Not available on this device</div>"}
-            ${speechAvailable ? "<div class='desc'>Read Portuguese aloud automatically</div>" : ""}</div>
+            ${speechAvailable ? "<div class='desc'>Read Portuguese aloud. Off = silent mode (same as the 🔊 / 🔇 button at the top)</div>" : ""}</div>
           <div class="switch ${settings.audio ? "on" : ""}" id="audioSw" ${speechAvailable ? "" : 'style="opacity:.4"'}></div>
         </div>
         ${speechAvailable ? `<div class="setting-row voice-row">
@@ -914,8 +948,7 @@
     const sw = document.getElementById("audioSw");
     if (speechAvailable) {
       sw.addEventListener("click", () => {
-        settings.audio = !settings.audio;
-        saveSettings(settings);
+        setAudio(!settings.audio);
         sw.classList.toggle("on", settings.audio);
       });
     }

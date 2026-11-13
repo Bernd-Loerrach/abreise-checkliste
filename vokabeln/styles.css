@@ -757,3 +757,10 @@ a.conj-more {
 /* ---------- Conjugation tense switch ---------- */
 .conj-tenses { display: flex; margin: 0 0 6px; }
 .conj-tenses button { flex: 1; }
+
+/* ---------- Mute / unmute ---------- */
+.mute-btn { font-size: 18px; }
+.topbar-actions .mute-btn { font-weight: 400; }
+body.muted .speak-btn,
+body.muted .mini-speak,
+body.muted .conj-say { opacity: 0.3; }
