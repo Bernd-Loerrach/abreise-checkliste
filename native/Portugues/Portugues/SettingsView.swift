@@ -62,6 +62,8 @@ struct SettingsView: View {
                 Text("New words are downloaded automatically when you're online.")
             }
         }
+        .readableWidth(700)
+        .background(Color(uiColor: .systemGroupedBackground))
         .navigationTitle("Settings")
         .onAppear { exportURL = try? progress.exportFile() }
         .fileImporter(isPresented: $importing, allowedContentTypes: [.json, .plainText, .data]) { result in
@@ -138,11 +140,12 @@ struct HelpView: View {
                 } label: {
                     Text(firstTime ? "Let's start 🚀" : "Back").font(.headline).foregroundStyle(.white)
                         .frame(maxWidth: .infinity).padding(.vertical, 16)
-                        .background(RoundedRectangle(cornerRadius: 16).fill(Color.accentColor))
+                        .background(RoundedRectangle(cornerRadius: 16).fill(Color.buttonGreen))
                 }
                 .buttonStyle(.plain)
             }
             .padding(16)
+            .readableWidth(700)
         }
         .background(Color(uiColor: .systemGroupedBackground))
         .navigationTitle("How it works")

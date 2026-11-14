@@ -44,6 +44,7 @@ struct DeckView: View {
             }
             .padding(.horizontal, 16)
             .padding(.bottom, 30)
+            .readableWidth()
         }
         .background(Color(uiColor: .systemGroupedBackground))
         .navigationTitle(deck.name)
@@ -63,7 +64,7 @@ struct DeckView: View {
         .padding(16)
         .foregroundStyle(primary ? .white : .primary)
         .background(RoundedRectangle(cornerRadius: 18, style: .continuous)
-            .fill(primary ? Color.accentColor : Color(uiColor: .secondarySystemGroupedBackground))
+            .fill(primary ? Color.buttonGreen : Color(uiColor: .secondarySystemGroupedBackground))
             .shadow(color: .black.opacity(0.06), radius: 8, y: 3))
     }
 }

@@ -6,6 +6,8 @@ struct HomeView: View {
     @AppStorage("direction") private var direction = Direction.ptEn.rawValue
     @State private var session: SessionRequest?
     @State private var statHint: String?
+    @Environment(\.horizontalSizeClass) private var sizeClass
+    private var wide: Bool { sizeClass == .regular }
 
     var body: some View {
         let s = progress.stats(vocab.allCards)
@@ -13,9 +15,13 @@ struct HomeView: View {
 
         ScrollView {
             VStack(alignment: .leading, spacing: 14) {
+                if wide {
+                    // On iPad / Mac the title sits in the centred column instead of the far-left bar.
+                    Text("Português 🇵🇹").font(.largeTitle.weight(.bold))
+                }
                 Text("\(vocab.allCards.count) words")
                     .font(.subheadline).foregroundStyle(.secondary)
-                    .padding(.top, -6)
+                    .padding(.top, wide ? -10 : -6)
 
                 Picker("Direction", selection: $direction) {
                     ForEach(Direction.allCases) { Text($0.label).tag($0.rawValue) }
@@ -36,6 +42,7 @@ struct HomeView: View {
                         .transition(.opacity)
                 }
 
+                let actions = Group {
                 Button {
                     let q = progress.learnQueue(vocab.allCards)
                     if !q.isEmpty { session = SessionRequest(kind: .learn, cards: q, pool: vocab.allCards, title: "Learn") }
@@ -54,21 +61,31 @@ struct HomeView: View {
                     bigButton(emoji: "🧩", title: "Quiz", sub: "Multiple choice over all words", badge: nil, primary: false)
                 }
                 .buttonStyle(.plain)
+                }
+                if wide {
+                    HStack(spacing: 12) { actions }
+                } else {
+                    actions
+                }
 
                 Text("TOPICS")
                     .font(.footnote.weight(.semibold)).foregroundStyle(.secondary)
                     .padding(.top, 10).padding(.leading, 4)
 
-                ForEach(vocab.decks) { deck in
-                    NavigationLink(value: deck) { DeckRow(deck: deck) }
-                        .buttonStyle(.plain)
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 340), spacing: 12)], spacing: 12) {
+                    ForEach(vocab.decks) { deck in
+                        NavigationLink(value: deck) { DeckRow(deck: deck) }
+                            .buttonStyle(.plain)
+                    }
                 }
             }
             .padding(.horizontal, 16)
             .padding(.bottom, 30)
+            .readableWidth(880)
         }
         .background(Color(uiColor: .systemGroupedBackground))
-        .navigationTitle("Português 🇵🇹")
+        .navigationTitle(wide ? "" : "Português 🇵🇹")
+        .navigationBarTitleDisplayMode(wide ? .inline : .automatic)
         .navigationDestination(for: Deck.self) { DeckView(deck: $0, session: $session) }
         .toolbar {
             ToolbarItemGroup(placement: .topBarTrailing) {
@@ -127,9 +144,10 @@ struct HomeView: View {
             }
         }
         .padding(18)
+        .frame(maxHeight: .infinity)
         .foregroundStyle(primary ? .white : .primary)
         .background(RoundedRectangle(cornerRadius: 18, style: .continuous)
-            .fill(primary ? Color.accentColor : Color(uiColor: .secondarySystemGroupedBackground))
+            .fill(primary ? Color.buttonGreen : Color(uiColor: .secondarySystemGroupedBackground))
             .shadow(color: .black.opacity(0.06), radius: 8, y: 3))
     }
 }

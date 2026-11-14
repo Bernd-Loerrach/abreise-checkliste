@@ -78,7 +78,7 @@ struct QuizView: View {
                     } label: {
                         Text("Continue ›").font(.headline).foregroundStyle(.white)
                             .frame(maxWidth: .infinity).padding(.vertical, 16)
-                            .background(RoundedRectangle(cornerRadius: 16).fill(Color.accentColor))
+                            .background(RoundedRectangle(cornerRadius: 16).fill(Color.buttonGreen))
                     }
                     .buttonStyle(.plain)
                     .padding(.top, 6)
@@ -86,6 +86,7 @@ struct QuizView: View {
             }
             .padding(.horizontal, 16)
             .padding(.bottom, 30)
+            .readableWidth(620)
         }
         .sensoryFeedback(.selection, trigger: chosen)
     }

@@ -36,6 +36,9 @@ struct LearnSessionView: View {
                             .id(step)
                     }
                     .padding(.horizontal, 16)
+                    .padding(.bottom, 8)
+                    .frame(maxHeight: 900)
+                    .readableWidth(620)
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -128,10 +131,10 @@ struct FlashcardView: View {
             if revealed {
                 HStack(spacing: 12) {
                     rateButton("✗ Not yet", color: .red, filled: false) { onRate(false) }
-                    rateButton("✓ Got it", color: .accentColor, filled: true) { onRate(true) }
+                    rateButton("✓ Got it", color: .buttonGreen, filled: true) { onRate(true) }
                 }
             } else {
-                rateButton("Show answer", color: .accentColor, filled: true) { toggle() }
+                rateButton("Show answer", color: .buttonGreen, filled: true) { toggle() }
             }
             Spacer(minLength: 0)
         }
@@ -224,7 +227,7 @@ struct DoneView: View {
             Button(action: onClose) {
                 Text("Back to home").font(.headline).foregroundStyle(.white)
                     .frame(maxWidth: .infinity).padding(.vertical, 16)
-                    .background(RoundedRectangle(cornerRadius: 16).fill(Color.accentColor))
+                    .background(RoundedRectangle(cornerRadius: 16).fill(Color.buttonGreen))
             }
             .buttonStyle(.plain)
             .padding(.top, 10)
@@ -232,5 +235,6 @@ struct DoneView: View {
         .padding(28)
         .surface(radius: 24)
         .padding(16)
+        .readableWidth(560)
     }
 }

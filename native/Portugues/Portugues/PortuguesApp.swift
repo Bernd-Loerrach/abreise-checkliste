@@ -63,7 +63,17 @@ struct RootView: View {
 
 // MARK: - Shared styling
 
+extension Color {
+    /// Deep green for filled buttons: white text stays readable in light and dark mode.
+    static let buttonGreen = Color(red: 10/255, green: 125/255, blue: 75/255)   // #0A7D4B
+}
+
 extension View {
+    /// Keeps content at a comfortable width on iPad / Mac and centres it (no effect on iPhone).
+    func readableWidth(_ max: CGFloat = 720) -> some View {
+        frame(maxWidth: max).frame(maxWidth: .infinity)
+    }
+
     /// White rounded "card" look used throughout the app.
     func surface(radius: CGFloat = 18) -> some View {
         background(RoundedRectangle(cornerRadius: radius, style: .continuous)
