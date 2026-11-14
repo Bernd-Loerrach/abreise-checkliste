@@ -10,6 +10,7 @@ struct LearnSessionView: View {
     @State private var queue: [Card]
     @State private var idx = 0
     @State private var requeue: [Card] = []
+    @State private var repeated = Set<String>()   // each missed word comes back only once per session
     @State private var seen = Set<String>()
     @State private var correct = 0
     @State private var finished = false
@@ -62,7 +63,10 @@ struct LearnSessionView: View {
             seen.insert(card.id)
             if ok { correct += 1 }
         }
-        if !ok && !requeue.contains(card) { requeue.append(card) }
+        if !ok && !repeated.contains(card.id) {
+            repeated.insert(card.id)
+            requeue.append(card)
+        }
         idx += 1
         if idx >= queue.count {
             if requeue.isEmpty {

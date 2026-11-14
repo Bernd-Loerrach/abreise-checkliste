@@ -456,7 +456,7 @@
           <h3>🎯 Learn</h3>
           <p>Each session mixes the words <b>due</b> for review with up to ${LEARN_BATCH} <b>new</b> ones.</p>
           <p>Look at the card, try to recall the answer, then <b>tap to flip</b> (tap again to flip back). Rate yourself honestly:
-            <b>✓ Got it</b> or <b>✗ Not yet</b>. Missed words come back again at the end of the session.</p>
+            <b>✓ Got it</b> or <b>✗ Not yet</b>. A missed word comes back once more at the end of the session – and again tomorrow.</p>
         </div>
 
         <div class="help-card">
@@ -682,6 +682,7 @@
     let correct = 0; // unique words answered correctly (at some point)
     const seenIds = new Set();
     const requeue = []; // wrong answers repeated at the end
+    const repeated = new Set(); // each missed word comes back only once per session
 
     function step() {
       clear();
@@ -705,7 +706,10 @@
             seenIds.add(card.id);
             if (ok) correct++;
           }
-          if (!ok && !requeue.includes(card)) requeue.push(card);
+          if (!ok && !repeated.has(card.id)) {
+            repeated.add(card.id);
+            requeue.push(card);
+          }
           idx++;
           haptic();
           step();

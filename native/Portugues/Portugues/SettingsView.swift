@@ -108,7 +108,7 @@ struct HelpView: View {
                 card("🎯 Learn", """
                 Each session mixes the words **due** for review with up to \(ProgressStore.learnBatch) **new** ones.
 
-                Look at the card, try to recall the answer, then **tap to flip** (tap again to flip back). Rate yourself honestly: **✓ Got it** or **✗ Not yet**. Missed words come back again at the end of the session.
+                Look at the card, try to recall the answer, then **tap to flip** (tap again to flip back). Rate yourself honestly: **✓ Got it** or **✗ Not yet**. A missed word comes back once more at the end of the session – and again tomorrow.
                 """)
                 card("📈 Why words come back later", """
                 The app uses **spaced repetition**. Every “Got it” sends a word further into the future:
