@@ -467,7 +467,7 @@
             <li><b>Direction</b> (top of the home screen): Portuguese → English, English → Portuguese, or Both mixed.</li>
             <li><b>Topics</b>: practise one topic or letter at a time, or browse all its words.</li>
             <li><b>🧩 Quiz</b>: quick multiple choice; your answers count too.</li>
-            <li><b>📖 Conjugation</b> on verb cards: present and past tense (pretérito perfeito), marked regular or irregular.</li>
+            <li><b>📖 Conjugation</b> on verb cards: present, past (pretérito perfeito) and imperative, marked regular or irregular.</li>
             <li><b>📘 Infopedia</b>: opens the word in the Infopedia dictionary (needs internet).</li>
             <li><b>🔊 Sound</b>: Portuguese pronunciation. No sound? ⚙️ Settings → Voice → Test.</li>
           </ul>
