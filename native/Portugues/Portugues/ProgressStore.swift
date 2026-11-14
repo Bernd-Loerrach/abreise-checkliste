@@ -33,6 +33,8 @@ final class ProgressStore {
     private(set) var revision = 0
 
     private let cloud = NSUbiquitousKeyValueStore.default
+    /// Card ids that moved to another deck (old -> new); see `useRenames`.
+    private var renames: [String: String] = [:]
 
     init() {
         if let data = UserDefaults.standard.data(forKey: Self.key),
@@ -107,6 +109,25 @@ final class ProgressStore {
         }
     }
 
+    /// Words moved to another deck keep their progress: re-key saved states (old id -> new id).
+    func useRenames(_ map: [String: String]) {
+        guard !map.isEmpty else { return }
+        renames = map
+        guard states.keys.contains(where: { map[$0] != nil }) else { return }
+        states = renamed(states)
+        save()
+    }
+
+    private func renamed(_ incoming: [String: CardState]) -> [String: CardState] {
+        guard !renames.isEmpty else { return incoming }
+        var out: [String: CardState] = [:]
+        for (id, s) in incoming {
+            let n = renames[id] ?? id
+            if Self.wins(s, over: out[n]) { out[n] = s }
+        }
+        return out
+    }
+
     /// Is `b` (from elsewhere) newer/better than `a` (this device)?
     private static func wins(_ b: CardState, over a: CardState?) -> Bool {
         guard let a else { return true }
@@ -125,7 +146,7 @@ final class ProgressStore {
     @discardableResult
     func merge(_ incoming: [String: CardState], pushToCloud: Bool = true) -> Int {
         var changed = 0
-        for (id, s) in incoming where Self.valid(s) && Self.wins(s, over: states[id]) {
+        for (id, s) in renamed(incoming) where Self.valid(s) && Self.wins(s, over: states[id]) {
             states[id] = s
             changed += 1
         }

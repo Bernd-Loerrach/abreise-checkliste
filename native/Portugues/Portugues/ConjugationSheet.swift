@@ -69,7 +69,8 @@ struct ConjugationSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .topBarTrailing) { Button("Done") { dismiss() } } }
         }
-        .presentationDetents([.medium, .large])
+        // iPad / Mac: the half-height sheet would cut the table off, so open it full size.
+        .presentationDetents(UIDevice.current.userInterfaceIdiom == .pad ? [.large] : [.medium, .large])
     }
 
     private func tag(_ kind: String) -> some View {

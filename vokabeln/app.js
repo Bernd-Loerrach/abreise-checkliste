@@ -46,7 +46,8 @@
     } catch {}
   }
 
-  let progress = loadProgress();
+  let progress = renameIds(loadProgress());
+  saveProgress(progress);
   let settings = loadSettings();
   applyTheme();
 
@@ -96,7 +97,18 @@
     }
     return b.box > a.box || (b.box === a.box && b.due > a.due); // older data: furthest along wins
   }
+  // Words that moved to another deck keep their progress (old id -> new id, see renamed.js).
+  function renameIds(p) {
+    const map = typeof RENAMED !== "undefined" ? RENAMED : {};
+    const out = {};
+    for (const [id, e] of Object.entries(p || {})) {
+      const nid = map[id] || id;
+      if (!out[nid] || (validEntry(e) && wins(e, out[nid]))) out[nid] = e;
+    }
+    return out;
+  }
   function mergeProgress(incoming) {
+    incoming = renameIds(incoming);
     let changed = 0;
     for (const [id, e] of Object.entries(incoming)) {
       if (!validEntry(e)) continue;
@@ -465,7 +477,7 @@
           <h3>🧭 More features</h3>
           <ul>
             <li><b>Direction</b> (top of the home screen): Portuguese → English, English → Portuguese, or Both mixed.</li>
-            <li><b>Topics</b>: practise one topic or letter at a time, or browse all its words.</li>
+            <li><b>Topics</b>: practise one topic at a time, or browse all its words.</li>
             <li><b>🧩 Quiz</b>: quick multiple choice; your answers count too.</li>
             <li><b>📖 Conjugation</b> on verb cards: present, past (pretérito perfeito) and imperative, marked regular or irregular.</li>
             <li><b>📘 Infopedia</b>: opens the word in the Infopedia dictionary (needs internet).</li>
@@ -500,7 +512,7 @@
       el(`<div class="topbar">
         <div>
           <h1>Português 🇵🇹</h1>
-          <div class="subtitle">Português a Valer 1 · ${ALL_CARDS.length} words</div>
+          <div class="subtitle">European Portuguese · ${ALL_CARDS.length} words</div>
         </div>
         <div class="topbar-actions">
           ${muteBtn()}

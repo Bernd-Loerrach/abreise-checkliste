@@ -30,6 +30,8 @@ struct VocabFile: Codable {
     let version: Int
     let decks: [DeckData]
     let conj: [String: ConjEntry]
+    /// Card ids that moved to another deck (old id -> new id), so progress follows the word.
+    var renamed: [String: String]?
 }
 
 /// One flashcard. `id` is identical to the web app ("deckId:pt"), so progress
@@ -59,12 +61,13 @@ struct Deck: Identifiable, Hashable {
 @MainActor
 @Observable
 final class VocabStore {
-    static let remoteURL = URL(string: "https://bernd-loerrach.github.io/abreise-checkliste/vokabeln/vocab.json")!
+    static let remoteURL = URL(string: "https://bernd-loerrach.github.io/abreise-checkliste/vokabeln/vocab2.json")!
 
     private(set) var decks: [Deck] = []
     private(set) var allCards: [Card] = []
     private(set) var conj: [String: ConjEntry] = [:]
     private(set) var version: Int = 0
+    private(set) var renamed: [String: String] = [:]
 
     private var cacheURL: URL {
         let dir = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
@@ -88,6 +91,7 @@ final class VocabStore {
     private func apply(_ file: VocabFile) {
         version = file.version
         conj = file.conj
+        renamed = file.renamed ?? [:]
         decks = file.decks.map { d in
             Deck(id: d.id, icon: d.icon, name: d.name, namePt: d.namePt,
                  cards: d.cards.map { c in

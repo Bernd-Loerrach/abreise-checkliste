@@ -124,7 +124,7 @@ struct HelpView: View {
                 """)
                 card("🧭 More features", """
                 • **Direction** (top of the home screen): Portuguese → English, English → Portuguese, or Both mixed.
-                • **Topics**: practise one topic or letter at a time, or browse all its words.
+                • **Topics**: practise one topic at a time, or browse all its words.
                 • **🧩 Quiz**: quick multiple choice; your answers count too.
                 • **📖 Conjugation** on verb cards: present, past (pretérito perfeito) and imperative, marked regular or irregular.
                 • **📘 Infopedia**: opens the word in the Infopedia dictionary (needs internet).

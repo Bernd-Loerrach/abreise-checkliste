@@ -14,7 +14,11 @@ struct PortuguesApp: App {
                 .environment(progress)
                 .environment(speaker)
                 .preferredColorScheme(appearance == "light" ? .light : appearance == "dark" ? .dark : nil)
-                .task { await vocab.refreshFromWeb() }
+                .task {
+                    progress.useRenames(vocab.renamed)
+                    await vocab.refreshFromWeb()
+                    progress.useRenames(vocab.renamed)
+                }
         }
     }
 }
