@@ -54,6 +54,8 @@ OVR = {
     "vestir": ["visto", "vestes", "veste", "vestimos", "vestem"],
     "medir": ["meço", "medes", "mede", "medimos", "medem"],
     "reduzir": ["reduzo", "reduzes", "reduz", "reduzimos", "reduzem"],
+    "conduzir": ["conduzo", "conduzes", "conduz", "conduzimos", "conduzem"],
+    "transferir": ["transfiro", "transferes", "transfere", "transferimos", "transferem"],
     "passear": ["passeio", "passeias", "passeia", "passeamos", "passeiam"],
     "chover": ["", "", "chove", "", "chovem"],
     "nevar": ["", "", "neva", "", "nevam"],

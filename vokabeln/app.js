@@ -622,7 +622,7 @@
     view.appendChild(
       el(`<div style="margin:0 2px 16px">
         <h1 style="margin:0;font-size:26px;letter-spacing:-0.02em">${esc(deck.name)}</h1>
-        <div class="subtitle" style="font-size:14px">${deck.cards.length} words starting with “${esc(deck.icon)}”</div>
+        <div class="subtitle" style="font-size:14px">${esc(deck.namePt)} · ${deck.cards.length} words</div>
       </div>`)
     );
 

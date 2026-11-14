@@ -15,7 +15,7 @@ The name under the icon on the Home Screen stays “Português”.
 ## Promotional text (170)
 
 ```
-Learn about 1,000 everyday words of European Portuguese – a few minutes a day with flashcards, a quick quiz, real pronunciation and verb tables.
+Learn 1,300 everyday words of European Portuguese – a few minutes a day with flashcards, a quick quiz, real pronunciation and verb tables.
 ```
 
 ## Description (4000)
@@ -23,7 +23,7 @@ Learn about 1,000 everyday words of European Portuguese – a few minutes a day 
 ```
 Learn the words you really need for life in Portugal – in European Portuguese, not Brazilian.
 
-Português Vocab is a calm, simple flashcard trainer with about 1,000 everyday words and phrases, sorted into topics like people & family, home, food, shopping, town & directions, travel, work, health, free time and more.
+Português Vocab is a calm, simple flashcard trainer with about 1,300 everyday words and phrases, sorted into topics like people & family, home, food, shopping, town & directions, travel, car & driving, work, paperwork, bank & post office, health, free time and more.
 
 HOW IT WORKS
 • Learn: each session mixes the words due for review with up to 10 new ones. Flip the card, then rate yourself: “Got it” or “Not yet”.
@@ -33,7 +33,7 @@ HOW IT WORKS
 
 MADE FOR EUROPEAN PORTUGUESE
 • Pronunciation with a Portuguese (Portugal) voice
-• Verb conjugations for 150+ verbs: present, past (pretérito perfeito) and imperative, marked regular or irregular
+• Verb conjugations for 170+ verbs: present, past (pretérito perfeito) and imperative, marked regular or irregular
 • Articles and short notes where they help (“há seis meses”, “dói-me / doem-me” …)
 • One tap to look up any word in the Infopedia dictionary
 
