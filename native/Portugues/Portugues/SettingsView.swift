@@ -36,7 +36,7 @@ struct SettingsView: View {
             }
 
             Section {
-                Label("Automatic iCloud sync – coming soon", systemImage: "icloud")
+                Label("Syncs automatically through iCloud", systemImage: "checkmark.icloud")
                 if let exportURL {
                     ShareLink(item: exportURL) { Label("Send progress file", systemImage: "square.and.arrow.up") }
                 }
@@ -47,7 +47,7 @@ struct SettingsView: View {
             } header: {
                 Text("Sync between devices")
             } footer: {
-                Text("Until iCloud sync is switched on, use the progress file – it also works with the web version: “Send progress” there, then “Load progress file” here. For each word your latest answer is kept.")
+                Text("iPhone, iPad and Mac signed in to the same Apple Account share your progress by themselves (iCloud must be on for this device). The progress file is for moving progress from the web version or an older install: “Send progress” there, then “Load progress file” here. For each word your latest answer is kept.")
             }
 
             Section {
@@ -129,9 +129,9 @@ struct HelpView: View {
                 • **🔊 / 🔇**: sound on or off (silent mode).
                 """)
                 card("📱 Your progress", """
-                Progress is saved on this device. **Automatic iCloud sync** between iPhone, iPad and Mac is built in and will be switched on with the App Store version.
+                Progress **syncs automatically through iCloud** between your iPhone, iPad and Mac – just use the same Apple Account on all of them. It usually arrives within a minute or so.
 
-                Until then, or coming from the web version: There: ⚙️ Settings → **Send progress**. Here: ⚙️ Settings → **Load progress file**. Nothing gets lost – for each word your latest answer is kept.
+                Coming from the web version or an older install? There: ⚙️ Settings → **Send progress**. Here: ⚙️ Settings → **Load progress file**. Nothing gets lost – for each word your latest answer is kept.
                 """)
                 Button {
                     dismiss()
