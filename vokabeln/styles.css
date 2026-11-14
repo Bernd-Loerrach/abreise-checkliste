@@ -764,3 +764,11 @@ a.conj-more {
 body.muted .speak-btn,
 body.muted .mini-speak,
 body.muted .conj-say { opacity: 0.3; }
+
+/* ---------- Sync between devices ---------- */
+.sync-row { gap: 10px; justify-content: stretch; }
+.sync-row .test-btn { flex: 1; padding: 12px 10px; }
+.test-btn.alt { background: var(--surface-2); color: var(--accent); }
+.sync-msg { display: none; padding: 0 18px 15px; font-size: 13px; line-height: 1.4; color: var(--accent); }
+.sync-msg.show { display: block; }
+.sync-msg.warn { color: var(--red); }

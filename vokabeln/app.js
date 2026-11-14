@@ -77,8 +77,76 @@
     if (correct) box = Math.min(MAX_BOX, (st.box || 0) + 1);
     else box = 1; // back to box 1
     const due = Date.now() + INTERVALS[box] * DAY;
-    progress[id] = { box, due, seen: true };
+    progress[id] = { box, due, seen: true, t: Date.now() }; // t = when last answered (for syncing)
     saveProgress(progress);
+  }
+
+  // ---------- Sync between devices (send / load a progress file) ----------
+  function validEntry(e) {
+    return e && typeof e === "object" && Number.isFinite(e.box) && e.box >= 0 && e.box <= MAX_BOX &&
+      Number.isFinite(e.due) && typeof e.seen === "boolean";
+  }
+  // Is entry b (from the other device) newer/better than a (this device)?
+  function wins(b, a) {
+    if (!a) return true;
+    if (Number.isFinite(b.t) && Number.isFinite(a.t)) return b.t > a.t; // latest answer wins
+    if (Number.isFinite(b.t) !== Number.isFinite(a.t)) {
+      if (b.box !== a.box) return b.box > a.box;
+      return Number.isFinite(b.t);
+    }
+    return b.box > a.box || (b.box === a.box && b.due > a.due); // older data: furthest along wins
+  }
+  function mergeProgress(incoming) {
+    let changed = 0;
+    for (const [id, e] of Object.entries(incoming)) {
+      if (!validEntry(e)) continue;
+      if (wins(e, progress[id])) {
+        const st = { box: e.box, due: e.due, seen: e.seen };
+        if (Number.isFinite(e.t)) st.t = e.t;
+        progress[id] = st;
+        changed++;
+      }
+    }
+    saveProgress(progress);
+    return changed;
+  }
+  async function sendProgress(msg) {
+    const day = new Date().toISOString().slice(0, 10);
+    const name = `portugues-progress-${day}.json`;
+    const data = JSON.stringify({ app: "pt-vocab", v: 1, exported: Date.now(), progress });
+    const file = new File([data], name, { type: "application/json" });
+    const words = Object.values(progress).filter((e) => e && e.seen).length;
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      try {
+        await navigator.share({ files: [file], title: "Portuguese progress" });
+        msg(`✓ Sent (${words} words practised). Now tap “Load progress” on the other device.`);
+        return;
+      } catch (e) {
+        if (e && e.name === "AbortError") return; // closed the share sheet
+      }
+    }
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(file);
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+    msg(`✓ Saved “${name}” to Downloads. Send it to the other device (AirDrop, Mail…), then tap “Load progress” there.`);
+  }
+  async function loadProgressFile(file, msg) {
+    try {
+      const obj = JSON.parse(await file.text());
+      if (!obj || obj.app !== "pt-vocab" || typeof obj.progress !== "object") throw new Error("wrong file");
+      const changed = mergeProgress(obj.progress);
+      const when = obj.exported ? new Date(obj.exported).toLocaleString() : "";
+      const s = stats();
+      msg(changed
+        ? `✓ Loaded: ${changed} word${changed === 1 ? "" : "s"} updated${when ? ` (file from ${when})` : ""}. Learned now: ${s.learned}.`
+        : `✓ Already up to date – nothing new in this file${when ? ` (from ${when})` : ""}.`);
+    } catch {
+      msg("⚠️ That isn't a progress file from this app. Pick the “portugues-progress-….json” file.", true);
+    }
   }
 
   // ---------- Statistics ----------
@@ -408,6 +476,7 @@
         <div class="help-card">
           <h3>📱 Your progress</h3>
           <p>Progress is saved <b>on this device only</b> – iPhone, iPad and Mac each keep their own. On iPhone/iPad the home-screen icon and Safari are separate too, so always open it the same way.</p>
+          <p>To bring them together: <b>⚙️ Settings → Sync between devices</b>. Tap <b>Send progress</b> on the device you just used, then <b>Load progress</b> on the other one. Nothing gets lost – for each word your latest answer is kept.</p>
           <p>Install it with Safari → Share → <b>Add to Home Screen</b>. After that it also works <b>offline</b>.</p>
         </div>
 
@@ -908,6 +977,22 @@
       </div>`);
     view.appendChild(miscGroup);
 
+    const syncGroup = el(`<div class="setting-group">
+        <div class="setting-row">
+          <div>Sync between devices
+            <div class="desc">Learn on iPhone, iPad and Mac: tap <b>Send progress</b> on the device you just used
+              (AirDrop, Messages, Mail…), then <b>Load progress</b> on the other one and pick that file.
+              Both are combined – for each word your latest answer is kept, nothing gets lost.</div></div>
+        </div>
+        <div class="setting-row sync-row">
+          <button class="test-btn" id="sendProg">📤 Send progress</button>
+          <button class="test-btn alt" id="loadProg">📥 Load progress</button>
+        </div>
+        <div class="sync-msg" id="syncMsg"></div>
+        <input type="file" id="loadFile" hidden>
+      </div>`);
+    view.appendChild(syncGroup);
+
     const reset = el(`<button class="danger-btn" id="reset">Reset progress</button>`);
     view.appendChild(reset);
 
@@ -952,6 +1037,19 @@
         sw.classList.toggle("on", settings.audio);
       });
     }
+    const syncMsg = document.getElementById("syncMsg");
+    const msg = (text, warn) => {
+      syncMsg.textContent = text;
+      syncMsg.classList.add("show");
+      syncMsg.classList.toggle("warn", !!warn);
+    };
+    document.getElementById("sendProg").addEventListener("click", () => sendProgress(msg));
+    const loadFile = document.getElementById("loadFile");
+    document.getElementById("loadProg").addEventListener("click", () => loadFile.click());
+    loadFile.addEventListener("change", () => {
+      if (loadFile.files && loadFile.files[0]) loadProgressFile(loadFile.files[0], msg);
+      loadFile.value = "";
+    });
     reset.addEventListener("click", () => {
       if (confirm("Really delete all your progress? This can't be undone.")) {
         progress = {};
