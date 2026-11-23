@@ -68,6 +68,16 @@ struct HomeView: View {
                     actions
                 }
 
+                let nFav = progress.favoriteCards(vocab.allCards).count
+                NavigationLink {
+                    FavoritesView(session: $session)
+                } label: {
+                    bigButton(emoji: "⭐", title: "Difficult words",
+                              sub: nFav > 0 ? "Your starred words – practise them anytime" : "Tap ☆ on a word to add it here",
+                              badge: nFav > 0 ? "\(nFav)" : nil, primary: false)
+                }
+                .buttonStyle(.plain)
+
                 Text("TOPICS")
                     .font(.footnote.weight(.semibold)).foregroundStyle(.secondary)
                     .padding(.top, 10).padding(.leading, 4)
@@ -138,7 +148,8 @@ struct HomeView: View {
             if let badge {
                 Text(badge).font(.headline)
                     .padding(.horizontal, 10).padding(.vertical, 4)
-                    .background(Capsule().fill(.white.opacity(primary ? 0.25 : 0)))
+                    .foregroundStyle(.white)
+                    .background(Capsule().fill(primary ? Color.white.opacity(0.25) : Color.buttonGreen))
             } else {
                 Image(systemName: "chevron.right").foregroundStyle(.secondary)
             }

@@ -12,6 +12,8 @@
   const INTERVALS = [0, 1, 3, 7, 16, 35, 90];
   const MAX_BOX = INTERVALS.length - 1;
   const LEARN_BATCH = 10; // new cards per "Learn" session
+  const FAV_KEY = "pt-vocab-fav-v1"; // ⭐ difficult words: { id: { on, t } }
+  const FAV_MAX_DAYS = 3; // a starred word never waits longer than this
 
   const DAY = 24 * 60 * 60 * 1000;
   const app = document.getElementById("app");
@@ -48,6 +50,7 @@
 
   let progress = renameIds(loadProgress());
   saveProgress(progress);
+  let favs = loadFavs();
   let settings = loadSettings();
   applyTheme();
 
@@ -77,9 +80,77 @@
     let box;
     if (correct) box = Math.min(MAX_BOX, (st.box || 0) + 1);
     else box = 1; // back to box 1
-    const due = Date.now() + INTERVALS[box] * DAY;
+    let days = INTERVALS[box];
+    if (isFav(id)) days = Math.min(days, FAV_MAX_DAYS); // ⭐ words come back sooner
+    const due = Date.now() + days * DAY;
     progress[id] = { box, due, seen: true, t: Date.now() }; // t = when last answered (for syncing)
     saveProgress(progress);
+  }
+
+  // ---------- ⭐ Difficult words ----------
+  function loadFavs() {
+    try {
+      return JSON.parse(localStorage.getItem(FAV_KEY)) || {};
+    } catch {
+      return {};
+    }
+  }
+  function saveFavs() {
+    try {
+      localStorage.setItem(FAV_KEY, JSON.stringify(favs));
+    } catch {}
+  }
+  function isFav(id) {
+    return !!(favs[id] && favs[id].on);
+  }
+  function favCards() {
+    return ALL_CARDS.filter((c) => isFav(c.id));
+  }
+  function toggleFav(id) {
+    const on = !isFav(id);
+    favs[id] = { on, t: Date.now() };
+    saveFavs();
+    // Starring a word scheduled far ahead brings it forward.
+    const st = progress[id];
+    if (on && st && st.seen && st.due > Date.now() + FAV_MAX_DAYS * DAY) {
+      progress[id] = { ...st, due: Date.now(), t: Date.now() };
+      saveProgress(progress);
+    }
+    return on;
+  }
+  // Latest change per word wins (works for both starring and un-starring).
+  function mergeFavs(incoming) {
+    const map = typeof RENAMED !== "undefined" ? RENAMED : {};
+    let changed = 0;
+    for (const [id0, f] of Object.entries(incoming || {})) {
+      if (!f || typeof f.on !== "boolean" || !Number.isFinite(f.t)) continue;
+      const id = map[id0] || id0;
+      if (!favs[id] || f.t > favs[id].t) {
+        if (isFav(id) !== f.on) changed++;
+        favs[id] = { on: f.on, t: f.t };
+      }
+    }
+    saveFavs();
+    return changed;
+  }
+  function starBtn(card, cls) {
+    const on = isFav(card.id);
+    return `<button class="${cls} ${on ? "on" : ""}" data-star="${esc(card.id)}" aria-label="${
+      on ? "Remove from difficult words" : "Mark as difficult"
+    }">${on ? "★" : "☆"}</button>`;
+  }
+  // Toggle a word and refresh every star button for it on screen.
+  function onStar(e, card, after) {
+    e.stopPropagation();
+    const on = toggleFav(card.id);
+    document.querySelectorAll("[data-star]").forEach((b) => {
+      if (b.dataset.star !== card.id) return;
+      b.classList.toggle("on", on);
+      b.textContent = on ? "★" : "☆";
+      b.setAttribute("aria-label", on ? "Remove from difficult words" : "Mark as difficult");
+    });
+    haptic();
+    if (after) after(on);
   }
 
   // ---------- Sync between devices (send / load a progress file) ----------
@@ -125,7 +196,7 @@
   async function sendProgress(msg) {
     const day = new Date().toISOString().slice(0, 10);
     const name = `portugues-progress-${day}.json`;
-    const data = JSON.stringify({ app: "pt-vocab", v: 1, exported: Date.now(), progress });
+    const data = JSON.stringify({ app: "pt-vocab", v: 1, exported: Date.now(), progress, favorites: favs });
     const file = new File([data], name, { type: "application/json" });
     const words = Object.values(progress).filter((e) => e && e.seen).length;
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
@@ -150,7 +221,7 @@
     try {
       const obj = JSON.parse(await file.text());
       if (!obj || obj.app !== "pt-vocab" || typeof obj.progress !== "object") throw new Error("wrong file");
-      const changed = mergeProgress(obj.progress);
+      const changed = mergeProgress(obj.progress) + mergeFavs(obj.favorites);
       const when = obj.exported ? new Date(obj.exported).toLocaleString() : "";
       const s = stats();
       msg(changed
@@ -479,6 +550,7 @@
             <li><b>Direction</b> (top of the home screen): Portuguese → English, English → Portuguese, or Both mixed.</li>
             <li><b>Topics</b>: practise one topic at a time, or browse all its words.</li>
             <li><b>🧩 Quiz</b>: quick multiple choice; your answers count too.</li>
+            <li><b>⭐ Difficult words</b>: tap ☆ on a card or word to star it. Starred words come first in Learn, come back after 3 days at the latest, and you can practise them anytime from the home screen.</li>
             <li><b>📖 Conjugation</b> on verb cards: present, past (pretérito perfeito) and imperative, marked regular or irregular.</li>
             <li><b>📘 Infopedia</b>: opens the word in the Infopedia dictionary (needs internet).</li>
             <li><b>🔊 Sound</b>: Portuguese pronunciation. No sound? ⚙️ Settings → Voice → Test.</li>
@@ -566,6 +638,17 @@
     quizBtn.addEventListener("click", () => startQuiz());
     view.appendChild(quizBtn);
 
+    const nFav = favCards().length;
+    const favBtn = el(`<button class="cta secondary" id="favBtn">
+        <span class="big-emoji">⭐</span>
+        <span class="cta-text">Difficult words
+          <span class="cta-sub">${nFav ? "Your starred words – practise them anytime" : "Tap ☆ on a word to add it here"}</span>
+        </span>
+        ${nFav ? `<span class="badge">${nFav}</span>` : `<span class="chev">›</span>`}
+      </button>`);
+    favBtn.addEventListener("click", renderFavs);
+    view.appendChild(favBtn);
+
     view.appendChild(el(`<div class="section-title">Topics</div>`));
     for (const deck of DECKS) {
       const ds = deckStats(deck);
@@ -645,19 +728,72 @@
     view.appendChild(quizBtn);
 
     view.appendChild(el(`<div class="section-title">All words</div>`));
-    for (const c of deckCards) {
-      const item = el(`<div class="browse-item">
-          <span class="box-dot ${isLearned(c.id) ? "learned" : ""}"></span>
-          <span>
-            <span class="pt">${esc(c.pt)}</span><br>
-            <span class="de">${esc(c.en)}${c.note ? " · " + esc(c.note) : ""}</span>
-          </span>
-          <a class="mini-info" href="${infopediaDict(c.pt)}" target="_blank" rel="noopener" aria-label="Look up on Infopedia">📘</a>
-          ${speechAvailable ? `<button class="mini-speak" aria-label="Speak">🔊</button>` : ""}
-        </div>`);
-      const sp = item.querySelector(".mini-speak");
-      if (sp) sp.addEventListener("click", () => speak(c.pt));
-      view.appendChild(item);
+    for (const c of deckCards) view.appendChild(wordRow(c));
+
+    app.appendChild(view);
+    document.getElementById("back").addEventListener("click", renderHome);
+  }
+
+  function wordRow(c, onStarChange) {
+    const item = el(`<div class="browse-item">
+        <span class="box-dot ${isLearned(c.id) ? "learned" : ""}"></span>
+        <span>
+          <span class="pt">${esc(c.pt)}</span><br>
+          <span class="de">${esc(c.en)}${c.note ? " · " + esc(c.note) : ""}</span>
+        </span>
+        ${starBtn(c, "mini-star")}
+        <a class="mini-info" href="${infopediaDict(c.pt)}" target="_blank" rel="noopener" aria-label="Look up on Infopedia">📘</a>
+        ${speechAvailable ? `<button class="mini-speak" aria-label="Speak">🔊</button>` : ""}
+      </div>`);
+    item.querySelector(".mini-star").addEventListener("click", (e) => onStar(e, c, onStarChange));
+    const sp = item.querySelector(".mini-speak");
+    if (sp) sp.addEventListener("click", () => speak(c.pt));
+    return item;
+  }
+
+  // =================================================================
+  //  ⭐ DIFFICULT WORDS (starred words, practise anytime)
+  // =================================================================
+  function renderFavs() {
+    clear();
+    const cards = favCards();
+    const view = el(`<div class="fade-in"></div>`);
+    view.appendChild(
+      el(`<div class="topbar">
+        <button class="back-btn" id="back">‹ Home</button>
+        <div class="icon-btn" style="margin-left:auto">⭐</div>
+      </div>`)
+    );
+    view.appendChild(
+      el(`<div style="margin:0 2px 16px">
+        <h1 style="margin:0;font-size:26px;letter-spacing:-0.02em">Difficult words</h1>
+        <div class="subtitle" style="font-size:14px">Palavras difíceis · ${cards.length} word${cards.length === 1 ? "" : "s"}</div>
+      </div>`)
+    );
+    view.appendChild(
+      el(`<div class="stat-hint">Tap <b>☆</b> on any card or word to star it. Starred words come <b>first</b> in Learn and
+        come back after <b>${FAV_MAX_DAYS} days at the latest</b>, even when you know them. Remove the star once a word sits.</div>`)
+    );
+
+    const learnBtn = el(`<button class="cta" ${cards.length ? "" : "disabled"}>
+        <span class="big-emoji">🎯</span>
+        <span class="cta-text">Practise these<span class="cta-sub">${cards.length === 1 ? "1 starred word" : `All ${cards.length} starred words`}</span></span>
+        <span class="chev">›</span>
+      </button>`);
+    learnBtn.addEventListener("click", () => startSession(shuffle(favCards()), "Difficult words"));
+    view.appendChild(learnBtn);
+
+    const quizBtn = el(`<button class="cta secondary" ${cards.length ? "" : "disabled"}>
+        <span class="big-emoji">🧩</span>
+        <span class="cta-text">Quiz these<span class="cta-sub">Multiple choice</span></span>
+        <span class="chev">›</span>
+      </button>`);
+    quizBtn.addEventListener("click", () => startQuiz(ALL_CARDS, "Quiz: Difficult words", favCards()));
+    view.appendChild(quizBtn);
+
+    if (cards.length) {
+      view.appendChild(el(`<div class="section-title">Starred words</div>`));
+      for (const c of cards) view.appendChild(wordRow(c, () => renderFavs()));
     }
 
     app.appendChild(view);
@@ -671,7 +807,9 @@
     const now = Date.now();
     const due = ALL_CARDS.filter((c) => isDue(c.id, now));
     const news = ALL_CARDS.filter((c) => isNew(c.id)).slice(0, LEARN_BATCH);
-    const queue = shuffle(due).concat(news);
+    // ⭐ starred words first, then the other reviews, then new words
+    const queue = shuffle(due.filter((c) => isFav(c.id)))
+      .concat(shuffle(due.filter((c) => !isFav(c.id))), news);
     if (queue.length === 0) return renderHome();
     startSession(queue, "Learn");
   }
@@ -743,6 +881,7 @@
     const flash = el(`<div class="flashcard" id="flash">
         <div class="flashcard-inner">
           <div class="face front">
+            ${starBtn(card, "star-btn")}
             <div class="lang-tag">${frontLang(dir)}</div>
             <div class="word ${fWord.length > 12 ? "small" : ""}">${esc(fWord)}</div>
             ${
@@ -753,6 +892,7 @@
             <div class="tap-hint">Tap to flip</div>
           </div>
           <div class="face back">
+            ${starBtn(card, "star-btn")}
             <div class="lang-tag">${backLang(dir)}</div>
             <div class="word ${bWord.length > 12 ? "small" : ""}">${esc(bWord)}</div>
             ${card.note ? `<div class="note">${esc(card.note)}</div>` : ""}
@@ -806,10 +946,11 @@
     }
 
     flash.addEventListener("click", (e) => {
-      if (e.target.closest(".speak-btn") || e.target.closest(".conj-btn") || e.target.closest("a")) return; // not a flip
+      if (e.target.closest(".speak-btn") || e.target.closest(".conj-btn") || e.target.closest(".star-btn") || e.target.closest("a")) return; // not a flip
       toggleFlip();
     });
     document.getElementById("reveal").addEventListener("click", reveal);
+    flash.querySelectorAll(".star-btn").forEach((b) => b.addEventListener("click", (e) => onStar(e, card)));
     const cb = document.getElementById("conjBtn");
     if (cb) cb.addEventListener("click", (e) => { e.stopPropagation(); openConj(card); });
 
@@ -846,14 +987,15 @@
   // =================================================================
   //  QUIZ (multiple choice)
   // =================================================================
-  function startQuiz(pool, title) {
+  function startQuiz(pool, title, from) {
     pool = pool || ALL_CARDS;
     title = title || "Quiz";
     if (pool.length < 4) {
       alert("The quiz needs at least 4 words.");
       return renderHome();
     }
-    const questions = shuffle(pool).slice(0, Math.min(10, pool.length));
+    const src = from || pool; // questions come from here, wrong options from the pool
+    const questions = shuffle(src).slice(0, Math.min(10, src.length));
     let idx = 0;
     let correct = 0;
 

@@ -2,6 +2,31 @@ import AVFoundation
 import Observation
 import SwiftUI
 
+/// ☆ / ★ — marks a word as difficult (it then gets priority).
+struct StarButton: View {
+    @Environment(ProgressStore.self) private var progress
+    let id: String
+    var size: CGFloat = 34
+
+    var body: some View {
+        let on = progress.isFavorite(id)
+        Button { progress.toggleFavorite(id) } label: {
+            Image(systemName: on ? "star.fill" : "star")
+                .font(.system(size: size * 0.52, weight: .semibold))
+                .foregroundStyle(on ? Color.starGold : Color.secondary)
+                .frame(width: size, height: size)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .sensoryFeedback(.selection, trigger: on)
+        .accessibilityLabel(on ? "Remove from difficult words" : "Mark as difficult")
+    }
+}
+
+extension Color {
+    static let starGold = Color(red: 245/255, green: 166/255, blue: 35/255)
+}
+
 /// European-Portuguese pronunciation with Apple's built-in voices (works offline).
 @MainActor
 @Observable

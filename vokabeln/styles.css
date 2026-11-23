@@ -772,3 +772,32 @@ body.muted .conj-say { opacity: 0.3; }
 .sync-msg { display: none; padding: 0 18px 15px; font-size: 13px; line-height: 1.4; color: var(--accent); }
 .sync-msg.show { display: block; }
 .sync-msg.warn { color: var(--red); }
+
+/* ---------- ⭐ Difficult words ---------- */
+.star-btn {
+  position: absolute;
+  top: 10px; right: 10px;
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  background: transparent;
+  border: none;
+  font-size: 26px; line-height: 1;
+  color: var(--text-dim);
+  cursor: pointer;
+  z-index: 2;
+}
+.star-btn.on, .mini-star.on { color: #f5a623; }
+.browse-item .mini-star {
+  margin-left: auto;
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  background: var(--surface-2);
+  border: none;
+  display: grid; place-items: center;
+  font-size: 19px; line-height: 1;
+  color: var(--text-dim);
+  flex-shrink: 0;
+  cursor: pointer;
+}
+.browse-item .mini-star + .mini-info { margin-left: 8px; }
+.browse-item .mini-star.on { color: #f5a623; }

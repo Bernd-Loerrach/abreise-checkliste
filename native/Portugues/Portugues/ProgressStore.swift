@@ -9,12 +9,19 @@ struct CardState: Codable, Equatable {
     var t: Double?     // when last answered (used to merge devices)
 }
 
+/// ⭐ Difficult word: starred or not, and when that last changed (latest change wins when merging).
+struct FavState: Codable, Equatable {
+    var on: Bool
+    var t: Double
+}
+
 /// File format shared with the web app's "Send progress" / "Load progress".
 struct ProgressFile: Codable {
     var app: String = "pt-vocab"
     var v: Int = 1
     var exported: Double
     var progress: [String: CardState]
+    var favorites: [String: FavState]? = nil
 }
 
 /// Spaced repetition (Leitner boxes) + saving + iCloud sync between devices.
@@ -27,8 +34,12 @@ final class ProgressStore {
     static let learnBatch = 10
     private static let day: Double = 24 * 60 * 60 * 1000
     private static let key = "progress-v1"
+    private static let favKey = "favorites-v1"
+    /// A starred word never waits longer than this many days.
+    static let favMaxDays: Double = 3
 
     private(set) var states: [String: CardState] = [:]
+    private(set) var favorites: [String: FavState] = [:]
     /// Bumped on every change so views refresh their numbers.
     private(set) var revision = 0
 
@@ -41,14 +52,22 @@ final class ProgressStore {
            let s = try? JSONDecoder().decode([String: CardState].self, from: data) {
             states = s
         }
+        if let data = UserDefaults.standard.data(forKey: Self.favKey),
+           let f = try? JSONDecoder().decode([String: FavState].self, from: data) {
+            favorites = f
+        }
         NotificationCenter.default.addObserver(
             forName: NSUbiquitousKeyValueStore.didChangeExternallyNotification,
             object: cloud, queue: .main
         ) { [weak self] _ in
-            MainActor.assumeIsolated { self?.pullFromCloud() }
+            MainActor.assumeIsolated {
+                self?.pullFromCloud()
+                self?.pullFavoritesFromCloud()
+            }
         }
         cloud.synchronize()
         pullFromCloud()
+        pullFavoritesFromCloud()
     }
 
     nonisolated static func now() -> Double { Date().timeIntervalSince1970 * 1000 }
@@ -67,7 +86,9 @@ final class ProgressStore {
         let s = state(id)
         let box = correct ? min(Self.maxBox, s.box + 1) : 1
         let now = Self.now()
-        states[id] = CardState(box: box, due: now + Self.intervals[box] * Self.day, seen: true, t: now)
+        var days = Self.intervals[box]
+        if isFavorite(id) { days = min(days, Self.favMaxDays) }   // ⭐ words come back sooner
+        states[id] = CardState(box: box, due: now + days * Self.day, seen: true, t: now)
         save()
     }
 
@@ -88,15 +109,71 @@ final class ProgressStore {
     /// Due reviews (shuffled) + up to 10 new words — exactly like the web app.
     func learnQueue(_ cards: [Card]) -> [Card] {
         let now = Self.now()
-        let due = cards.filter { isDue($0.id, now: now) }.shuffled()
+        let due = cards.filter { isDue($0.id, now: now) }
         let new = cards.filter { isNew($0.id) }.prefix(Self.learnBatch)
-        return due + new
+        // ⭐ starred reviews first, then the others, then new words
+        return due.filter { isFavorite($0.id) }.shuffled() + due.filter { !isFavorite($0.id) }.shuffled() + new
     }
 
     func resetAll() {
         states = [:]
         save(pushToCloud: false)
         cloud.removeObject(forKey: Self.key)
+    }
+
+    // MARK: ⭐ Difficult words
+
+    func isFavorite(_ id: String) -> Bool { favorites[id]?.on == true }
+
+    func favoriteCards(_ cards: [Card]) -> [Card] {
+        _ = revision
+        return cards.filter { isFavorite($0.id) }
+    }
+
+    func toggleFavorite(_ id: String) {
+        let on = !isFavorite(id)
+        let now = Self.now()
+        favorites[id] = FavState(on: on, t: now)
+        saveFavorites()
+        // Starring a word scheduled far ahead brings it forward.
+        if on, var s = states[id], s.seen, s.due > now + Self.favMaxDays * Self.day {
+            s.due = now
+            s.t = now
+            states[id] = s
+            save()
+        }
+    }
+
+    /// Merge stars from another device. Returns how many words changed.
+    @discardableResult
+    func mergeFavorites(_ incoming: [String: FavState], pushToCloud: Bool = true) -> Int {
+        var changed = 0
+        for (id0, f) in incoming where f.t.isFinite {
+            let id = renames[id0] ?? id0
+            if let mine = favorites[id], mine.t >= f.t { continue }
+            if isFavorite(id) != f.on { changed += 1 }
+            favorites[id] = f
+        }
+        saveFavorites(pushToCloud: pushToCloud)
+        return changed
+    }
+
+    private func saveFavorites(pushToCloud: Bool = true) {
+        revision += 1
+        if let data = try? JSONEncoder().encode(favorites) {
+            UserDefaults.standard.set(data, forKey: Self.favKey)
+            if pushToCloud { cloud.set(data, forKey: Self.favKey) }
+        }
+    }
+
+    private func pullFavoritesFromCloud() {
+        guard let data = cloud.data(forKey: Self.favKey),
+              let remote = try? JSONDecoder().decode([String: FavState].self, from: data) else {
+            if !favorites.isEmpty, let d = try? JSONEncoder().encode(favorites) { cloud.set(d, forKey: Self.favKey) }
+            return
+        }
+        mergeFavorites(remote, pushToCloud: false)
+        if let d = try? JSONEncoder().encode(favorites), d != data { cloud.set(d, forKey: Self.favKey) }
     }
 
     // MARK: Saving + merging
@@ -171,7 +248,7 @@ final class ProgressStore {
     // MARK: Progress files (compatible with the web app)
 
     func exportFile() throws -> URL {
-        let file = ProgressFile(exported: Self.now(), progress: states)
+        let file = ProgressFile(exported: Self.now(), progress: states, favorites: favorites)
         let enc = JSONEncoder()
         enc.outputFormatting = [.sortedKeys]
         let day = ISO8601DateFormatter.string(from: Date(), timeZone: .current, formatOptions: [.withFullDate])
@@ -202,7 +279,13 @@ final class ProgressStore {
                   let s = try? JSONDecoder().decode(CardState.self, from: d) else { continue }
             incoming[id] = s
         }
+        var favs: [String: FavState] = [:]
+        for (id, value) in (raw["favorites"] as? [String: Any]) ?? [:] {
+            guard let d = try? JSONSerialization.data(withJSONObject: value),
+                  let f = try? JSONDecoder().decode(FavState.self, from: d) else { continue }
+            favs[id] = f
+        }
         let exported = (raw["exported"] as? Double).map { Date(timeIntervalSince1970: $0 / 1000) }
-        return (merge(incoming), exported)
+        return (merge(incoming) + mergeFavorites(favs), exported)
     }
 }

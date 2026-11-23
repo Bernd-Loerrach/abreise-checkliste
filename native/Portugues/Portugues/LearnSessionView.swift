@@ -192,6 +192,7 @@ struct FlashcardView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .surface(radius: 24)
         .contentShape(Rectangle())
+        .overlay(alignment: .topTrailing) { StarButton(id: card.id, size: 46).padding(8) }
     }
 
     private func chip(_ s: String) -> some View {

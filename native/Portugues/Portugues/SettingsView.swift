@@ -126,6 +126,7 @@ struct HelpView: View {
                 • **Direction** (top of the home screen): Portuguese → English, English → Portuguese, or Both mixed.
                 • **Topics**: practise one topic at a time, or browse all its words.
                 • **🧩 Quiz**: quick multiple choice; your answers count too.
+                • **⭐ Difficult words**: tap ☆ on a card or word to star it. Starred words come first in Learn, come back after 3 days at the latest, and you can practise them anytime from the home screen.
                 • **📖 Conjugation** on verb cards: present, past (pretérito perfeito) and imperative, marked regular or irregular.
                 • **📘 Infopedia**: opens the word in the Infopedia dictionary (needs internet).
                 • **🔊 / 🔇**: sound on or off (silent mode).

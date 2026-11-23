@@ -86,6 +86,7 @@ struct WordRow: View {
                     .font(.subheadline).foregroundStyle(.secondary)
             }
             Spacer(minLength: 4)
+            StarButton(id: card.id)
             if vocab.conjugation(for: card) != nil {
                 Button { showConj = true } label: {
                     Image(systemName: "book").frame(width: 34, height: 34)
