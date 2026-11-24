@@ -23,7 +23,7 @@ Learn 1,300 everyday words of European Portuguese – a few minutes a day with f
 ```
 Learn the words you really need for life in Portugal – in European Portuguese, not Brazilian.
 
-Português Vocab is a calm, simple flashcard trainer with about 1,300 everyday words and phrases, sorted into topics like people & family, home, food, shopping, town & directions, travel, car & driving, work, paperwork, bank & post office, health, free time and more.
+Português Vocab is a calm, simple flashcard trainer with about 1,300 everyday words and phrases, sorted into topics like people & family, home, food, shopping, town & directions, travel, car & driving, work, paperwork, bank & post office, health, free time, outdoors and more.
 
 HOW IT WORKS
 • Learn: each session mixes the words due for review with up to 10 new ones. Flip the card, then rate yourself: “Got it” or “Not yet”.
