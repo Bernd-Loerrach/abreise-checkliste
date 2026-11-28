@@ -8,6 +8,11 @@ struct HomeView: View {
     @State private var statHint: String?
     @Environment(\.horizontalSizeClass) private var sizeClass
     private var wide: Bool { sizeClass == .regular }
+    @State private var screen: CGSize = .zero
+    /// Short phone screens (e.g. iPhone Duo, iPhone SE): topics as compact tiles in two columns.
+    private var squarish: Bool {
+        !wide && screen.height > 0 && screen.height < 760 && screen.width >= 340
+    }
 
     var body: some View {
         let s = progress.stats(vocab.allCards)
@@ -82,9 +87,11 @@ struct HomeView: View {
                     .font(.footnote.weight(.semibold)).foregroundStyle(.secondary)
                     .padding(.top, 10).padding(.leading, 4)
 
-                LazyVGrid(columns: [GridItem(.adaptive(minimum: 340), spacing: 12)], spacing: 12) {
+                LazyVGrid(columns: squarish
+                          ? [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)]
+                          : [GridItem(.adaptive(minimum: 340), spacing: 12)], spacing: 12) {
                     ForEach(vocab.decks) { deck in
-                        NavigationLink(value: deck) { DeckRow(deck: deck) }
+                        NavigationLink(value: deck) { DeckRow(deck: deck, compact: squarish) }
                             .buttonStyle(.plain)
                     }
                 }
@@ -94,6 +101,11 @@ struct HomeView: View {
             .readableWidth(880)
         }
         .background(Color(uiColor: .systemGroupedBackground))
+        .background(GeometryReader { g in
+            Color.clear
+                .onAppear { screen = g.size }
+                .onChange(of: g.size) { _, new in screen = new }
+        })
         .navigationTitle(wide ? "" : "Português 🇵🇹")
         .navigationBarTitleDisplayMode(wide ? .inline : .automatic)
         .navigationDestination(for: Deck.self) { DeckView(deck: $0, session: $session) }
@@ -166,9 +178,38 @@ struct HomeView: View {
 struct DeckRow: View {
     @Environment(ProgressStore.self) private var progress
     let deck: Deck
+    /// Narrow tile for two columns on wide phones.
+    var compact = false
 
     var body: some View {
         let s = progress.stats(deck.cards)
+        if compact {
+            VStack(alignment: .leading, spacing: 6) {
+                HStack(spacing: 8) {
+                    Text(deck.icon)
+                        .font(.system(size: 19, weight: .bold, design: .rounded))
+                        .frame(width: 34, height: 34)
+                        .background(RoundedRectangle(cornerRadius: 10).fill(Color.secondary.opacity(0.1)))
+                    Spacer(minLength: 4)
+                    Text("\(s.learned)/\(s.total)").font(.caption.monospacedDigit()).foregroundStyle(.secondary)
+                }
+                Text(deck.name).font(.subheadline.weight(.semibold))
+                    .lineLimit(2).minimumScaleFactor(0.85)
+                    .multilineTextAlignment(.leading)
+                Text(deck.namePt).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                Spacer(minLength: 0)
+                ProgressBar(value: s.total == 0 ? 0 : Double(s.learned) / Double(s.total))
+            }
+            .padding(12)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            .surface()
+            .contentShape(Rectangle())
+        } else {
+            fullRow(s)
+        }
+    }
+
+    private func fullRow(_ s: ProgressStore.Stats) -> some View {
         HStack(spacing: 14) {
             Text(deck.icon)
                 .font(.system(size: 24, weight: .bold, design: .rounded))
