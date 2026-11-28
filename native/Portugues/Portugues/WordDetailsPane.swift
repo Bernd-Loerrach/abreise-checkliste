@@ -78,35 +78,5 @@ struct WordDetailsPane: View {
             }
         }
 
-        // More words from the same topic
-        let others = topicWords
-        if !others.isEmpty {
-            Text("MORE FROM \(card.deckName.uppercased())")
-                .font(.footnote.weight(.semibold)).foregroundStyle(.secondary)
-                .padding(.top, 6)
-            VStack(spacing: 0) {
-                ForEach(others) { w in
-                    HStack(spacing: 10) {
-                        Text(w.pt).font(.body.weight(.semibold))
-                        Text(w.en).font(.subheadline).foregroundStyle(.secondary).lineLimit(1)
-                        Spacer(minLength: 4)
-                        SpeakButton(text: w.pt, size: 32)
-                    }
-                    .padding(.vertical, 8)
-                    if w.id != others.last?.id { Divider() }
-                }
-            }
-            .padding(.horizontal, 14).padding(.vertical, 4)
-            .surface(radius: 16)
-        }
-    }
-
-    /// Up to 6 neighbours of the word in its topic.
-    private var topicWords: [Card] {
-        guard let deck = vocab.decks.first(where: { $0.id == card.deckId }),
-              let i = deck.cards.firstIndex(where: { $0.id == card.id }) else { return [] }
-        let cards = deck.cards
-        let lo = max(0, min(i - 3, cards.count - 7))
-        return Array(cards[lo..<min(cards.count, lo + 7)]).filter { $0.id != card.id }.prefix(6).map { $0 }
     }
 }
