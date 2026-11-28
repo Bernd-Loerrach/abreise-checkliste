@@ -9,10 +9,14 @@ struct HomeView: View {
     @Environment(\.horizontalSizeClass) private var sizeClass
     private var wide: Bool { sizeClass == .regular }
     @State private var screen: CGSize = .zero
-    /// Short phone screens (e.g. iPhone Duo, iPhone SE): topics as compact tiles in two columns.
-    private var squarish: Bool {
-        !wide && screen.height > 0 && screen.height < 760 && screen.width >= 340
-    }
+    /// Width of the content column (screen minus side padding, capped like `readableWidth(880)`).
+    private var contentWidth: CGFloat { max(0, min(screen.width, 880) - 32) }
+    /// Short phone screens (iPhone Duo outer screen, iPhone SE).
+    private var shortScreen: Bool { !wide && screen.height > 0 && screen.height < 760 && screen.width >= 340 }
+    /// Enough room for two columns: iPad, Mac, iPhone Duo inner screen, or a short screen.
+    private var twoColumns: Bool { wide || contentWidth >= 560 || shortScreen }
+    /// Two columns but too narrow for full rows → compact tiles.
+    private var compactTiles: Bool { twoColumns && (contentWidth - 12) / 2 < 300 }
 
     var body: some View {
         let s = progress.stats(vocab.allCards)
@@ -67,7 +71,7 @@ struct HomeView: View {
                 }
                 .buttonStyle(.plain)
                 }
-                if wide {
+                if wide || contentWidth >= 560 {
                     HStack(spacing: 12) { actions }
                 } else {
                     actions
@@ -87,11 +91,10 @@ struct HomeView: View {
                     .font(.footnote.weight(.semibold)).foregroundStyle(.secondary)
                     .padding(.top, 10).padding(.leading, 4)
 
-                LazyVGrid(columns: squarish
-                          ? [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)]
-                          : [GridItem(.adaptive(minimum: 340), spacing: 12)], spacing: 12) {
+                LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 12), count: twoColumns ? 2 : 1),
+                          spacing: 12) {
                     ForEach(vocab.decks) { deck in
-                        NavigationLink(value: deck) { DeckRow(deck: deck, compact: squarish) }
+                        NavigationLink(value: deck) { DeckRow(deck: deck, compact: compactTiles) }
                             .buttonStyle(.plain)
                     }
                 }
