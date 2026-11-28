@@ -5,11 +5,14 @@ struct PortuguesApp: App {
     @State private var vocab = VocabStore()
     @State private var progress = ProgressStore()
     @State private var speaker = Speaker()
+    @State private var hinge = HingeState()
     @AppStorage("appearance") private var appearance = "auto"
 
     var body: some Scene {
         WindowGroup {
             RootView()
+                .background(HingeReader(state: hinge).ignoresSafeArea())
+                .environment(hinge)
                 .environment(vocab)
                 .environment(progress)
                 .environment(speaker)

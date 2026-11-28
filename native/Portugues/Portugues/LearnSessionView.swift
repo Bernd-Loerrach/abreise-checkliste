@@ -16,6 +16,9 @@ struct LearnSessionView: View {
     @State private var finished = false
     @State private var step = 0
     @State private var dir = Direction.ptEn   // fixed per card (matters for "Both")
+    @State private var flipped = false
+    @State private var revealed = false
+    @Environment(HingeState.self) private var hinge
     private let total: Int
 
     init(queue: [Card], title: String) {
@@ -30,11 +33,30 @@ struct LearnSessionView: View {
             Group {
                 if finished || queue.isEmpty {
                     DoneView(correct: correct, total: total) { dismiss() }
+                } else if hinge.halfOpen {
+                    // Half open (iPhone Duo): card above the fold, buttons below it.
+                    GeometryReader { g in
+                        let half = g.size.height / 2
+                        VStack(spacing: 0) {
+                            VStack(spacing: 8) {
+                                SessionHeader(title: title, index: min(seen.count + 1, total), total: total)
+                                flashcard(.card)
+                            }
+                            .padding(.top, g.safeAreaInsets.top + 12)
+                            .padding(.bottom, 14)
+                            .frame(height: half)
+                            flashcard(.controls)
+                                .padding(.top, 18)
+                            Spacer(minLength: 0)
+                        }
+                        .padding(.horizontal, 16)
+                        .readableWidth(620)
+                    }
+                    .ignoresSafeArea(edges: .vertical)
                 } else {
                     VStack(spacing: 10) {
                         SessionHeader(title: title, index: min(seen.count + 1, total), total: total)
-                        FlashcardView(card: queue[idx], direction: dir, onRate: rate)
-                            .id(step)
+                        flashcard(.all)
                     }
                     .padding(.horizontal, 16)
                     .padding(.bottom, 8)
@@ -56,7 +78,15 @@ struct LearnSessionView: View {
         dir = (Direction(rawValue: directionRaw) ?? .ptEn).resolved()
     }
 
+    private func flashcard(_ parts: FlashcardView.Parts) -> some View {
+        FlashcardView(card: queue[idx], direction: dir, parts: parts,
+                      flipped: $flipped, revealed: $revealed, onRate: rate)
+            .id(step)
+    }
+
     private func rate(_ ok: Bool) {
+        flipped = false
+        revealed = false
         let card = queue[idx]
         progress.rate(card.id, correct: ok)
         if !seen.contains(card.id) {
@@ -107,10 +137,13 @@ struct FlashcardView: View {
     @Environment(Speaker.self) private var speaker
     let card: Card
     let direction: Direction
+    /// Which part to show: everything, or (half-open iPhone Duo) only the card or only the buttons.
+    enum Parts { case all, card, controls }
+    var parts: Parts = .all
+    @Binding var flipped: Bool
+    @Binding var revealed: Bool
     let onRate: (Bool) -> Void
 
-    @State private var flipped = false
-    @State private var revealed = false
     @State private var showConj = false
 
     private var frontText: String { direction == .ptEn ? card.pt : card.en }
@@ -119,31 +152,22 @@ struct FlashcardView: View {
     private var backLang: String { direction == .ptEn ? "ENGLISH" : "PORTUGUÊS" }
 
     var body: some View {
-        VStack(spacing: 16) {
-            ZStack {
-                face(lang: frontLang, text: frontText, isBack: false)
-                    .opacity(flipped ? 0 : 1)
-                face(lang: backLang, text: backText, isBack: true)
-                    .rotation3DEffect(.degrees(180), axis: (0, 1, 0))
-                    .opacity(flipped ? 1 : 0)
-            }
-            .rotation3DEffect(.degrees(flipped ? 180 : 0), axis: (0, 1, 0), perspective: 0.5)
-            .animation(.spring(response: 0.45, dampingFraction: 0.8), value: flipped)
-            .onTapGesture { toggle() }
-            .frame(maxHeight: 460)
-
-            if revealed {
-                HStack(spacing: 12) {
-                    rateButton("✗ Not yet", color: .red, filled: false) { onRate(false) }
-                    rateButton("✓ Got it", color: .buttonGreen, filled: true) { onRate(true) }
+        Group {
+            switch parts {
+            case .all:
+                VStack(spacing: 16) {
+                    cardStack.frame(maxHeight: 460)
+                    controls(large: false)
+                    Spacer(minLength: 0)
                 }
-            } else {
-                rateButton("Show answer", color: .buttonGreen, filled: true) { toggle() }
+            case .card:
+                cardStack
+            case .controls:
+                controls(large: true)
             }
-            Spacer(minLength: 0)
         }
-        .sensoryFeedback(.selection, trigger: flipped)
-        .onAppear { if direction == .ptEn { speaker.speak(card.pt) } }
+        .sensoryFeedback(.selection, trigger: parts == .controls ? false : flipped)
+        .onAppear { if parts != .controls && direction == .ptEn { speaker.speak(card.pt) } }
         .sheet(isPresented: $showConj) {
             if let c = vocab.conjugation(for: card) { ConjugationSheet(card: card, entry: c) }
         }
@@ -153,6 +177,33 @@ struct FlashcardView: View {
         if !revealed { revealed = true }
         flipped.toggle()
         if flipped { speaker.speak(card.pt) }
+    }
+
+    private var cardStack: some View {
+        ZStack {
+            face(lang: frontLang, text: frontText, isBack: false)
+                .opacity(flipped ? 0 : 1)
+            face(lang: backLang, text: backText, isBack: true)
+                .rotation3DEffect(.degrees(180), axis: (0, 1, 0))
+                .opacity(flipped ? 1 : 0)
+        }
+        .rotation3DEffect(.degrees(flipped ? 180 : 0), axis: (0, 1, 0), perspective: 0.5)
+        .animation(.spring(response: 0.45, dampingFraction: 0.8), value: flipped)
+        .onTapGesture { toggle() }
+    }
+
+    @ViewBuilder
+    private func controls(large: Bool) -> some View {
+        Group {
+            if revealed {
+                HStack(spacing: 12) {
+                    rateButton("✗ Not yet", color: .red, filled: false, tall: large) { onRate(false) }
+                    rateButton("✓ Got it", color: .buttonGreen, filled: true, tall: large) { onRate(true) }
+                }
+            } else {
+                rateButton("Show answer", color: .buttonGreen, filled: true, tall: large) { toggle() }
+            }
+        }
     }
 
     private func face(lang: String, text: String, isBack: Bool) -> some View {
@@ -202,10 +253,11 @@ struct FlashcardView: View {
             .background(Capsule().fill(Color.secondary.opacity(0.12)))
     }
 
-    private func rateButton(_ label: String, color: Color, filled: Bool, action: @escaping () -> Void) -> some View {
+    private func rateButton(_ label: String, color: Color, filled: Bool, tall: Bool = false,
+                            action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            Text(label).font(.headline)
-                .frame(maxWidth: .infinity).padding(.vertical, 16)
+            Text(label).font(tall ? .title3.weight(.semibold) : .headline)
+                .frame(maxWidth: .infinity).padding(.vertical, tall ? 34 : 16)
                 .foregroundStyle(filled ? .white : color)
                 .background(RoundedRectangle(cornerRadius: 16, style: .continuous)
                     .fill(filled ? color : Color(uiColor: .secondarySystemGroupedBackground))
