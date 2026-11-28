@@ -10,7 +10,8 @@ Bernd's paid Apple Developer team (XV2WX4M26G) signs the app. Bundle ID `de.bern
    * User access: Full access
 2. **Xcode**: open `Portugues/Portugues.xcodeproj`. At the top choose the destination
    **Any iOS Device (arm64)**, then **Product → Archive**.
-3. The Organizer window opens → **Distribute App** → **TestFlight Internal Only** → Distribute.
+3. The Organizer window opens → **Distribute App** → **App Store Connect** (TestFlight & App Store) → Distribute.
+   *TestFlight Internal Only* builds can never be submitted to the App Store.
    After 5–15 minutes the build shows in App Store Connect → TestFlight (you get an email).
 4. App Store Connect → **TestFlight** → *Internal Testing* → **+** → create a group
    (e.g. "Family"), add yourself. Internal testers need **no** Apple review.

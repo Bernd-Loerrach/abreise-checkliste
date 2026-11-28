@@ -28,8 +28,9 @@ Português Vocab is a calm, simple flashcard trainer with about 1,300 everyday w
 HOW IT WORKS
 • Learn: each session mixes the words due for review with up to 10 new ones. Flip the card, then rate yourself: “Got it” or “Not yet”.
 • Spaced repetition: every word you know comes back a little later – tomorrow, in 3 days, 7, 16, 35, 90 days – right before you'd forget it.
+• Difficult words: star the words you find hard – they come first and come back sooner.
 • Quiz: quick multiple choice over all words or a single topic.
-• Both directions: Portuguese → English, English → Portuguese, or mixed.
+• Both directions: Portuguese to English, English to Portuguese, or mixed.
 
 MADE FOR EUROPEAN PORTUGUESE
 • Pronunciation with a Portuguese (Portugal) voice
@@ -78,13 +79,16 @@ Vocabulary trainer for European Portuguese. No login. Progress is stored locally
 ## Screenshots
 
 In `native/AppStore/screenshots/`:
-* `iphone-6.9/` – 1320 × 2868 (iPhone 6.9″, required)
-* `ipad-13/` – 2064 × 2752 (iPad 13″, required because the app runs on iPad)
+* `iphone-6.3/` – 1206 × 2622 (**required**: "iPhone with Dynamic Island, medium display")
+* `ipad-13/` – 2064 × 2752 (required, the app runs on iPad)
+* `iphone-6.9/` – 1320 × 2868 (optional large display)
 
-Drag them into the matching boxes under *Previews and Screenshots*, in file-name order.
+App Store Connect (2026): upload them in **Asset Library** (+ → Upload App Previews and Screenshots),
+then on the version page → App Previews and Screenshots → View All Sizes → **Browse Assets** per slot.
+No emoji or arrows in the description – Apple rejects them as invalid characters.
 
 ## Submit
 
-1. Under **Build**, click **+** and choose the latest TestFlight build.
+1. Under **Build**, click **+** and choose the latest build. Builds uploaded as *TestFlight Internal Only* can't be chosen – upload with the App Store option (see TESTFLIGHT.md).
 2. **Add for Review** → **Submit to App Review**. Review usually takes 1–2 days.
 3. Release: “Automatically release this version” is fine.
