@@ -2,6 +2,7 @@ import SwiftUI
 
 @main
 struct PortuguesApp: App {
+    @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @State private var vocab = VocabStore()
     @State private var progress = ProgressStore()
     @State private var speaker = Speaker()

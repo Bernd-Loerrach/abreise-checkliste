@@ -9,9 +9,9 @@ import UIKit
 final class WindowInfo {
     var size: CGSize = .zero
 
-    /// Tall, wide phone screen (iPhone Duo inner screen held vertically).
+    /// Tall window with room for two panes (iPhone Duo inner screen held vertically, iPad portrait).
     var twoPane: Bool {
-        UIDevice.current.userInterfaceIdiom == .phone && size.width >= 600 && size.height > size.width
+        size.width >= 600 && size.height >= 900 && size.height > size.width
     }
 }
 
@@ -41,5 +41,15 @@ final class WindowWatcherView: UIView {
     override func layoutSubviews() {
         super.layoutSubviews()
         if let size = window?.bounds.size, size != info?.size { info?.size = size }
+    }
+}
+
+/// Rotation: big screens (iPhone Duo inner screen, iPad) may turn and share the screen with another app;
+/// small iPhone screens stay upright as before.
+final class AppDelegate: NSObject, UIApplicationDelegate {
+    func application(_ application: UIApplication,
+                     supportedInterfaceOrientationsFor window: UIWindow?) -> UIInterfaceOrientationMask {
+        guard let screen = window?.windowScene?.screen.bounds.size else { return .all }
+        return min(screen.width, screen.height) >= 600 ? .all : .portrait
     }
 }

@@ -11,8 +11,11 @@ struct HomeView: View {
     @State private var screen: CGSize = .zero
     /// Width of the content column (screen minus side padding, capped like `readableWidth(880)`).
     private var contentWidth: CGFloat { max(0, min(screen.width, 880) - 32) }
-    /// Short phone screens (iPhone Duo outer screen, iPhone SE).
-    private var shortScreen: Bool { !wide && screen.height > 0 && screen.height < 760 && screen.width >= 340 }
+    @Environment(WindowInfo.self) private var window
+    /// Short phone screens (iPhone Duo outer screen, iPhone SE) – measured on the whole window.
+    private var shortScreen: Bool {
+        !wide && window.size.height > 0 && window.size.height < 760 && screen.width >= 340
+    }
     /// Room for full topic rows in two columns (iPad, Mac, iPhone Duo inner screen held sideways).
     private var fullTwoColumns: Bool { contentWidth >= 732 }
     /// Otherwise tiles: iPhone Duo inner screen upright (3 columns), short screens (2 columns).
