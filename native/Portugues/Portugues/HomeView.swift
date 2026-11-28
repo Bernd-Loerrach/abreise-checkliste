@@ -13,10 +13,12 @@ struct HomeView: View {
     private var contentWidth: CGFloat { max(0, min(screen.width, 880) - 32) }
     /// Short phone screens (iPhone Duo outer screen, iPhone SE).
     private var shortScreen: Bool { !wide && screen.height > 0 && screen.height < 760 && screen.width >= 340 }
-    /// Enough room for two columns: iPad, Mac, iPhone Duo inner screen, or a short screen.
-    private var twoColumns: Bool { wide || contentWidth >= 560 || shortScreen }
-    /// Two columns but too narrow for full rows → compact tiles.
-    private var compactTiles: Bool { twoColumns && (contentWidth - 12) / 2 < 300 }
+    /// Room for full topic rows in two columns (iPad, Mac, iPhone Duo inner screen held sideways).
+    private var fullTwoColumns: Bool { contentWidth >= 732 }
+    /// Otherwise tiles: iPhone Duo inner screen upright (3 columns), short screens (2 columns).
+    private var tiles: Bool { !fullTwoColumns && (wide || contentWidth >= 560 || shortScreen) }
+    private var tileColumns: Int { max(2, min(3, Int((contentWidth + 12) / 202))) }
+    private var topicColumns: Int { fullTwoColumns ? 2 : (tiles ? tileColumns : 1) }
 
     var body: some View {
         let s = progress.stats(vocab.allCards)
@@ -71,7 +73,7 @@ struct HomeView: View {
                 }
                 .buttonStyle(.plain)
                 }
-                if wide || contentWidth >= 560 {
+                if contentWidth >= 700 {
                     HStack(spacing: 12) { actions }
                 } else {
                     actions
@@ -91,10 +93,10 @@ struct HomeView: View {
                     .font(.footnote.weight(.semibold)).foregroundStyle(.secondary)
                     .padding(.top, 10).padding(.leading, 4)
 
-                LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 12), count: twoColumns ? 2 : 1),
+                LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 12), count: topicColumns),
                           spacing: 12) {
                     ForEach(vocab.decks) { deck in
-                        NavigationLink(value: deck) { DeckRow(deck: deck, compact: compactTiles) }
+                        NavigationLink(value: deck) { DeckRow(deck: deck, compact: tiles) }
                             .buttonStyle(.plain)
                     }
                 }
@@ -229,6 +231,7 @@ struct DeckRow: View {
             Image(systemName: "chevron.right").font(.footnote.weight(.semibold)).foregroundStyle(.tertiary)
         }
         .padding(14)
+        .frame(maxHeight: .infinity)
         .surface()
         .contentShape(Rectangle())
     }
