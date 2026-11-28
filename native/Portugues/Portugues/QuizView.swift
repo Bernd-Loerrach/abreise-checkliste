@@ -5,7 +5,7 @@ struct QuizView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(ProgressStore.self) private var progress
     @Environment(Speaker.self) private var speaker
-    @Environment(HingeState.self) private var hinge
+    @Environment(WindowInfo.self) private var window
 
     let questions: [Card]
     let pool: [Card]
@@ -23,7 +23,21 @@ struct QuizView: View {
                 if idx >= questions.count {
                     DoneView(correct: correct, total: questions.count) { dismiss() }
                 } else {
-                    if hinge.halfOpen { splitQuestion(questions[idx]) } else { question(questions[idx]) }
+                    if window.twoPane {
+                        // iPhone Duo inner screen held vertically: quiz on top, word details below.
+                        GeometryReader { g in
+                            VStack(spacing: 0) {
+                                question(questions[idx], showContinue: false).frame(height: g.size.height * 0.56)
+                                Divider()
+                                WordDetailsPane(card: questions[idx], revealed: chosen != nil) {
+                                    idx += 1
+                                    prepare()
+                                }
+                            }
+                        }
+                    } else {
+                        question(questions[idx])
+                    }
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
@@ -50,7 +64,7 @@ struct QuizView: View {
     private func front(_ c: Card) -> String { dir == .ptEn ? c.pt : c.en }
     private func back(_ c: Card) -> String { dir == .ptEn ? c.en : c.pt }
 
-    private func question(_ card: Card) -> some View {
+    private func question(_ card: Card, showContinue: Bool = true) -> some View {
         ScrollView {
             VStack(spacing: 12) {
                 SessionHeader(title: title, index: idx + 1, total: questions.count)
@@ -72,7 +86,7 @@ struct QuizView: View {
                         .buttonStyle(.plain)
                 }
 
-                if chosen != nil {
+                if chosen != nil && showContinue {
                     Button {
                         idx += 1
                         prepare()
@@ -89,59 +103,6 @@ struct QuizView: View {
             .padding(.bottom, 30)
             .readableWidth(620)
         }
-        .sensoryFeedback(.selection, trigger: chosen)
-    }
-
-    /// Half open (iPhone Duo): question above the fold, answers as a 2×2 grid below it.
-    private func splitQuestion(_ card: Card) -> some View {
-        GeometryReader { g in
-            let top = g.size.height / 2
-            VStack(spacing: 0) {
-                VStack(spacing: 10) {
-                    SessionHeader(title: title, index: idx + 1, total: questions.count)
-                    VStack(spacing: 10) {
-                        Text(dir == .ptEn ? "PORTUGUÊS → ENGLISH" : "ENGLISH → PORTUGUÊS")
-                            .font(.caption.weight(.bold)).tracking(1.2).foregroundStyle(.secondary)
-                        Text(front(card))
-                            .font(.system(size: 34, weight: .bold, design: .rounded))
-                            .multilineTextAlignment(.center)
-                            .minimumScaleFactor(0.6)
-                        if dir == .ptEn { SpeakButton(text: card.pt, size: 38) }
-                    }
-                    .padding(16)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .surface(radius: 22)
-                }
-                .padding(.top, g.safeAreaInsets.top + 12)
-                .padding(.bottom, 14)
-                .frame(height: top)
-
-                Color.clear.frame(height: 18)                  // keep the fold free
-
-                LazyVGrid(columns: [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)], spacing: 10) {
-                    ForEach(options) { o in
-                        Button { choose(o, card: card) } label: { optionLabel(o, card: card, tall: true) }
-                            .buttonStyle(.plain)
-                    }
-                }
-                if chosen != nil {
-                    Button {
-                        idx += 1
-                        prepare()
-                    } label: {
-                        Text("Continue ›").font(.headline).foregroundStyle(.white)
-                            .frame(maxWidth: .infinity).padding(.vertical, 14)
-                            .background(RoundedRectangle(cornerRadius: 16).fill(Color.buttonGreen))
-                    }
-                    .buttonStyle(.plain)
-                    .padding(.top, 10)
-                }
-                Spacer(minLength: 0)
-            }
-            .padding(.horizontal, 16)
-            .readableWidth(640)
-        }
-        .ignoresSafeArea(edges: .vertical)
         .sensoryFeedback(.selection, trigger: chosen)
     }
 

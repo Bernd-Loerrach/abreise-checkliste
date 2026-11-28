@@ -5,6 +5,25 @@ struct ConjugationSheet: View {
     @Environment(\.dismiss) private var dismiss
     let card: Card
     let entry: ConjEntry
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                ConjugationTable(card: card, entry: entry).padding(20)
+            }
+            .navigationTitle(card.pt)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar { ToolbarItem(placement: .topBarTrailing) { Button("Done") { dismiss() } } }
+        }
+        // iPad / Mac: the half-height sheet would cut the table off, so open it full size.
+        .presentationDetents(UIDevice.current.userInterfaceIdiom == .pad ? [.large] : [.medium, .large])
+    }
+}
+
+/// Tense picker + table (used in the sheet and in the word-details pane).
+struct ConjugationTable: View {
+    let card: Card
+    let entry: ConjEntry
     @AppStorage("conjTense") private var tense = "f"
 
     private static let pronouns = ["eu", "tu", "ele / ela / você", "nós", "eles / elas / vocês"]
@@ -27,50 +46,39 @@ struct ConjugationSheet: View {
             default: return (entry.f, entry.t, "present tense", Self.pronouns)
             }
         }()
-
-        NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 14) {
-                    HStack(alignment: .firstTextBaseline, spacing: 8) {
-                        Text("\(card.en) · \(name)").font(.subheadline).foregroundStyle(.secondary)
-                        if let kind { tag(kind) }
-                    }
-                    if tenses.count > 1 {
-                        Picker("Tense", selection: $tense) {
-                            ForEach(tenses, id: \.key) { Text($0.label).tag($0.key) }
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                Text("\(card.en) · \(name)").font(.subheadline).foregroundStyle(.secondary)
+                if let kind { tag(kind) }
+            }
+            if tenses.count > 1 {
+                Picker("Tense", selection: $tense) {
+                    ForEach(tenses, id: \.key) { Text($0.label).tag($0.key) }
+                }
+                .pickerStyle(.segmented)
+            }
+            VStack(spacing: 0) {
+                ForEach(Array(forms.enumerated()), id: \.offset) { i, f in
+                    if !f.isEmpty {
+                        HStack(spacing: 12) {
+                            Text(prons[i]).font(.footnote.weight(.semibold)).foregroundStyle(.secondary)
+                                .frame(width: 110, alignment: .leading)
+                            Text(current == "i" ? f + "!" : f).font(.title3.weight(.bold))
+                            Spacer()
+                            SpeakButton(text: f, size: 36)
                         }
-                        .pickerStyle(.segmented)
-                    }
-                    VStack(spacing: 0) {
-                        ForEach(Array(forms.enumerated()), id: \.offset) { i, f in
-                            if !f.isEmpty {
-                                HStack(spacing: 12) {
-                                    Text(prons[i]).font(.footnote.weight(.semibold)).foregroundStyle(.secondary)
-                                        .frame(width: 110, alignment: .leading)
-                                    Text(current == "i" ? f + "!" : f).font(.title3.weight(.bold))
-                                    Spacer()
-                                    SpeakButton(text: f, size: 36)
-                                }
-                                .padding(.vertical, 10)
-                                Divider()
-                            }
-                        }
-                    }
-                    Link(destination: PT.infopediaVerb(card.pt)) {
-                        Label("All tenses on Infopedia", systemImage: "arrow.up.right")
-                            .font(.subheadline.weight(.semibold))
-                            .frame(maxWidth: .infinity).padding(.vertical, 12)
-                            .background(RoundedRectangle(cornerRadius: 12).fill(Color.secondary.opacity(0.1)))
+                        .padding(.vertical, 10)
+                        Divider()
                     }
                 }
-                .padding(20)
             }
-            .navigationTitle(card.pt)
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar { ToolbarItem(placement: .topBarTrailing) { Button("Done") { dismiss() } } }
+            Link(destination: PT.infopediaVerb(card.pt)) {
+                Label("All tenses on Infopedia", systemImage: "arrow.up.right")
+                    .font(.subheadline.weight(.semibold))
+                    .frame(maxWidth: .infinity).padding(.vertical, 12)
+                    .background(RoundedRectangle(cornerRadius: 12).fill(Color.secondary.opacity(0.1)))
+            }
         }
-        // iPad / Mac: the half-height sheet would cut the table off, so open it full size.
-        .presentationDetents(UIDevice.current.userInterfaceIdiom == .pad ? [.large] : [.medium, .large])
     }
 
     private func tag(_ kind: String) -> some View {

@@ -18,7 +18,7 @@ struct LearnSessionView: View {
     @State private var dir = Direction.ptEn   // fixed per card (matters for "Both")
     @State private var flipped = false
     @State private var revealed = false
-    @Environment(HingeState.self) private var hinge
+    @Environment(WindowInfo.self) private var window
     private let total: Int
 
     init(queue: [Card], title: String) {
@@ -33,26 +33,21 @@ struct LearnSessionView: View {
             Group {
                 if finished || queue.isEmpty {
                     DoneView(correct: correct, total: total) { dismiss() }
-                } else if hinge.halfOpen {
-                    // Half open (iPhone Duo): card above the fold, buttons below it.
+                } else if window.twoPane {
+                    // iPhone Duo inner screen held vertically: learning on top, word details below.
                     GeometryReader { g in
-                        let half = g.size.height / 2
                         VStack(spacing: 0) {
-                            VStack(spacing: 8) {
+                            VStack(spacing: 10) {
                                 SessionHeader(title: title, index: min(seen.count + 1, total), total: total)
-                                flashcard(.card)
+                                flashcard(.all)
                             }
-                            .padding(.top, g.safeAreaInsets.top + 12)
-                            .padding(.bottom, 14)
-                            .frame(height: half)
-                            flashcard(.controls)
-                                .padding(.top, 18)
-                            Spacer(minLength: 0)
+                            .padding(.horizontal, 16)
+                            .padding(.bottom, 8)
+                            .frame(height: g.size.height * 0.52)
+                            Divider()
+                            WordDetailsPane(card: queue[idx], revealed: revealed)
                         }
-                        .padding(.horizontal, 16)
-                        .readableWidth(620)
                     }
-                    .ignoresSafeArea(edges: .vertical)
                 } else {
                     VStack(spacing: 10) {
                         SessionHeader(title: title, index: min(seen.count + 1, total), total: total)
