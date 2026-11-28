@@ -44,12 +44,12 @@ final class WindowWatcherView: UIView {
     }
 }
 
-/// Rotation: big screens (iPhone Duo inner screen, iPad) may turn and share the screen with another app;
-/// small iPhone screens stay upright as before.
+/// Rotation: the iPhone Duo (outer screen 466 pt wide, inner screen) and iPad may turn – and share the screen
+/// with another app; regular iPhones (at most 440 pt wide) stay upright as before.
 final class AppDelegate: NSObject, UIApplicationDelegate {
     func application(_ application: UIApplication,
                      supportedInterfaceOrientationsFor window: UIWindow?) -> UIInterfaceOrientationMask {
         guard let screen = window?.windowScene?.screen.bounds.size else { return .all }
-        return min(screen.width, screen.height) >= 600 ? .all : .portrait
+        return min(screen.width, screen.height) >= 450 ? .all : .portrait
     }
 }

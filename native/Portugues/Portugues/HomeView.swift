@@ -76,7 +76,8 @@ struct HomeView: View {
                 }
                 .buttonStyle(.plain)
                 }
-                if contentWidth >= 700 {
+                if contentWidth >= 700 || (window.size.height < 520 && contentWidth >= 480) {
+                    // wide screens, and short sideways screens (iPhone Duo outer screen turned)
                     HStack(spacing: 12) { actions }
                 } else {
                     actions
